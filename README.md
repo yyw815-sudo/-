@@ -27,8 +27,10 @@ medicalrecord
 | user_id      | bigint       | 所属用户     |
 | disease_name | varchar(100) | 慢性病名称    |
 | hospital     | varchar(100) | 就诊医院     |
+| department   | varchar(50)  | 就诊科室     |
 | doctor       | varchar(50)  | 主治医生     |
-| diagnosis    | text         | 诊断结果     |
-| prescription | text         | 医生处方     |
+| diagnosis    | text         | 医生诊断结果   |
+| prescription | text         | 医生处方内容   |
 | record_date  | date         | 就诊日期     |
-| create_time  | datetime     | 创建时间     |
+
+
