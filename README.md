@@ -69,3 +69,15 @@ medicineinteraction
 | description    | text        | 冲突说明        |
 | suggestion     | text        | 用药建议        |
 
+
+medicationrecord
+| 字段        | 类型           | 说明              |
+| --------- | ------------ | --------------- |
+| take_id   | bigint       | 服药记录编号          |
+| plan_id   | bigint       | 用药计划编号          |
+| user_id   | bigint       | 用户编号            |
+| take_time | datetime     | 实际服药时间          |
+| photo_url | varchar(255) | 上传照片            |
+| ai_result | varchar(255) | AI识别结果          |
+| status    | tinyint      | 服药状态（0：漏服，1：已服） |
+
