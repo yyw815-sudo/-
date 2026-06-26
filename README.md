@@ -34,3 +34,26 @@ medicalrecord
 | record_date  | date         | 就诊日期     |
 
 
+ocr_record
+| 字段               | 类型           | 说明        |
+| ---------------- | ------------ | --------- |
+| ocr_id           | bigint       | OCR记录编号   |
+| record_id        | bigint       | 对应病历编号    |
+| image_url        | varchar(255) | 上传图片地址    |
+| recognize_text   | text         | OCR识别原始文字 |
+| recognize_result | text         | 提取出的药物信息  |
+| accuracy         | decimal(5,2) | OCR识别准确率  |
+| create_time      | datetime     | 上传时间      |
+
+
+medicine
+| 字段               | 类型           | 说明     |
+| ---------------- | ------------ | ------ |
+| medicine_id      | bigint       | 药品编号   |
+| medicine_name    | varchar(100) | 药品名称   |
+| specification    | varchar(100) | 药品规格   |
+| dosage_form      | varchar(50)  | 剂型     |
+| manufacturer     | varchar(100) | 生产厂家   |
+| indication       | text         | 适应症    |
+| contraindication | text         | 禁忌症    |
+| precautions      | text         | 用药注意事项 |
