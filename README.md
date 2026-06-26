@@ -57,3 +57,15 @@ medicine
 | indication       | text         | 适应症    |
 | contraindication | text         | 禁忌症    |
 | precautions      | text         | 用药注意事项 |
+
+
+medicineinteraction
+| 字段             | 类型          | 说明          |
+| -------------- | ----------- | ----------- |
+| interaction_id | bigint      | 冲突规则编号      |
+| medicine_a     | bigint      | 药物A编号       |
+| medicine_b     | bigint      | 药物B编号       |
+| conflict_level | varchar(20) | 冲突等级（低/中/高） |
+| description    | text        | 冲突说明        |
+| suggestion     | text        | 用药建议        |
+
