@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: medical-reminder-system
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/medical_system?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: yao060815
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  
+  sql:
+    init:
+      mode: never
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+jwt:
+  secret: medical-reminder-system-jwt-secret-key-2024
+  expiration: 86400000
+
+baidu:
+  ocr:
+    app-id: your-app-id
+    api-key: your-api-key
+    secret-key: your-secret-key
+  ai:
+    api-key: your-ernie-api-key
+    secret-key: your-ernie-secret-key
+
+logging:
+  level:
+    com.medical: DEBUG
+    org.hibernate.SQL: DEBUG
