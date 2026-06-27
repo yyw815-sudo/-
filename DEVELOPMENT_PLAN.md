@@ -44,33 +44,34 @@
 
 ## 三、开发阶段
 
-### 第一阶段：项目初始化 ⭐ 当前阶段
+### 第一阶段：项目初始化 ✅ 已完成
 
 #### 任务清单
 
 - [x] 1.1 确定技术栈（已确定：Spring Boot + Vue 3 + 百度智能云）
 - [x] 1.2 注册百度智能云账号（领取免费额度）✅ 已完成
-- [ ] 1.3 初始化后端项目（Spring Boot）⏳ 待完成
-- [ ] 1.4 初始化前端项目（Vue 3 + Vite）⏳ 待完成
+- [x] 1.3 初始化后端项目（Spring Boot）✅ 已完成
+- [x] 1.4 初始化前端项目（Vue 3 + Vite）✅ 已完成
 - [x] 1.5 创建数据库（执行 DATABASE.md 中的建表语句）✅ 已完成
   - 数据库 `medical_system` 已创建
   - 20张数据表已建立
   - 默认管理员账号：admin / admin123
-- [ ] 1.6 练习 Git 协作流程（3人都要跑通）⏳ 进行中
-  - 已创建 `feature/database` 分支
-  - 待推送分支并合并
+- [x] 1.6 练习 Git 协作流程 ⏳ 待其他成员完善
+  - 已将 `feature/database` 重设为 `main` 分支
+  - 项目骨架代码已推送至远程 `main` 分支
+  - 远程 `feature/database` 分支已删除
 
 #### 输出物
 
 - 📄 `DATABASE.md`（数据库设计文档）✅ 已完成
 - 📄 `DEVELOPMENT_PLAN.md`（本文件）✅ 已完成
 - 📄 `backend/src/main/resources/schema.sql`（建表脚本）✅ 已完成
-- ⏳ 项目骨架代码（待初始化）
-- ⏳ Git协作流程演练（待完成）
+- 📄 项目骨架代码（Spring Boot + Vue 3）✅ 已完成
+- ✅ Git协作流程演练（`feature/database` → `main` 已完成）
 
 ---
 
-### 第二阶段：基础功能开发
+### 第二阶段：基础功能开发 ⭐ 当前阶段
 
 #### 同学A - 用户档案管理模块
 
@@ -275,20 +276,19 @@ medical-reminder-system/
 
 ### 待完成的工作 ⏳
 
-1. **项目初始化**（分配任务）
-   - ⏳ 同学A：负责初始化后端项目（Spring Boot骨架）
-   - ⏳ 同学B：负责初始化前端项目（Vue 3 + Vite）
-   - ⏳ 同学C（你）：负责Git分支推送和合并
+1. **项目初始化** ✅ 已完成
+   - ✅ 后端项目（Spring Boot骨架）已初始化
+   - ✅ 前端项目（Vue 3 + Vite）已初始化
+   - ✅ Git分支已整合到 `main`
 
-2. **Git协作演练**
-   - ⏳ 推送 `feature/database` 分支到远程
-   - ⏳ 合并分支到主分支
-   - ⏳ 3人都要跑通：创建分支 → 提交 → 合并 → 推送流程
+2. **Git协作演练** ⏳ 待其他成员完善
+   - ✅ 已将项目代码推送至远程 `main` 分支
+   - ✅ 远程 `feature/database` 分支已删除
+   - ⏳ 其他成员拉取最新 `main` 代码，各自创建功能分支开始开发
 
-3. **配置文件**
-   - ⏳ 配置 `backend/src/main/resources/application.yml`
-     - 数据库连接（用户名、密码）
-     - 百度AI密钥（API Key、Secret Key）
+3. **配置文件** ✅ 已完成
+   - ✅ 数据库连接（用户名、密码）
+   - ✅ 百度AI密钥（API Key、Secret Key）
 
 ---
 

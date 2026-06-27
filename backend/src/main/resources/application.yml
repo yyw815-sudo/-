@@ -32,12 +32,12 @@ jwt:
 
 baidu:
   ocr:
-    app-id: your-app-id
-    api-key: your-api-key
-    secret-key: your-secret-key
+    app-id: 7885025
+    api-key: PJecCd0K7luLtDgMY9pQx7RL
+    secret-key: qPMOezTT19KdHKQNvQEYVuij8a3bCLb4
   ai:
-    api-key: your-ernie-api-key
-    secret-key: your-ernie-secret-key
+    api-key: PJecCd0K7luLtDgMY9pQx7RL
+    secret-key: qPMOezTT19KdHKQNvQEYVuij8a3bCLb4
 
 logging:
   level:
