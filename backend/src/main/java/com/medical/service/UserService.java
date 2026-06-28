@@ -3,9 +3,12 @@ package com.medical.service;
 import com.medical.entity.User;
 import com.medical.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -18,6 +21,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
     /**
      * 创建用户
      */
@@ -25,6 +31,7 @@ public class UserService {
         if (userRepository.existsByUserName(user.getUserName())) {
             throw new RuntimeException("用户名已存在");
         }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
     
@@ -40,6 +47,13 @@ public class UserService {
      */
     public Optional<User> getUserByUserName(String userName) {
         return userRepository.findByUserName(userName);
+    }
+    
+    /**
+     * 根据手机号查询用户
+     */
+    public User getUserByPhone(String phone) {
+        return userRepository.findByPhone(phone).orElse(null);
     }
     
     /**
@@ -70,10 +84,24 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByUserName(userName);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (user.getPassword().equals(password)) {
+            if (passwordEncoder.matches(password, user.getPassword())) {
                 return user;
             }
         }
         return null;
+    }
+
+    /**
+     * 重置用户密码
+     */
+    public void resetPassword(Long userId, String newPassword) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("用户不存在");
+        }
     }
 }

@@ -25,7 +25,7 @@ public class UserController {
      * 用户注册
      */
     @PostMapping("/register")
-    public Result<User> register(@Valid @RequestBody UserRegisterDTO dto) {
+    public Result<User> register(@Valid @RequestBody UserRegisterDTO dto) {     
         User user = new User();
         user.setUserName(dto.getUserName());
         user.setPassword(dto.getPassword());
@@ -33,7 +33,7 @@ public class UserController {
         user.setPhone(dto.getPhone());
 
         User savedUser = userService.createUser(user);
-        savedUser.setPassword(null); // 不返回密码
+        savedUser.setPassword(null);
 
         return Result.success("注册成功", savedUser);
     }
@@ -47,15 +47,15 @@ public class UserController {
         if (user != null) {
             Map<String, Object> data = new HashMap<>();
             data.put("userId", user.getUserId());
-            data.put("userName", user.getUserName());
+            data.put("userName", user.getUserName());       
             data.put("realname", user.getRealname());
-            data.put("token", "mock-token-" + user.getUserId()); // TODO: 后续实现JWT
+            data.put("token", "mock-token-" + user.getUserId());
 
             return Result.success("登录成功", data);
         }
         return Result.error("用户名或密码错误");
     }
-
+    
     /**
      * 获取用户信息
      */
@@ -77,7 +77,7 @@ public class UserController {
         return userService.getUserById(userId)
                 .map(existingUser -> {
                     user.setUserId(userId);
-                    user.setPassword(existingUser.getPassword()); // 保持原密码
+                    user.setPassword(existingUser.getPassword());
                     User updatedUser = userService.updateUser(user);
                     updatedUser.setPassword(null);
                     return Result.success("更新成功", updatedUser);

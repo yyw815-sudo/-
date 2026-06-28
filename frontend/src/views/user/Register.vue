@@ -15,9 +15,6 @@
         <el-form-item prop="phone">
           <el-input v-model="registerForm.phone" placeholder="请输入手机号" prefix-icon="Phone" size="large" />
         </el-form-item>
-        <el-form-item prop="email">
-          <el-input v-model="registerForm.email" placeholder="请输入邮箱" prefix-icon="Message" size="large" />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" size="large" :loading="loading" class="register-btn" @click="handleRegister">注 册</el-button>
         </el-form-item>
@@ -44,13 +41,27 @@ const registerForm = reactive({
   userName: '',
   password: '',
   realName: '',
-  phone: '',
-  email: ''
+  phone: ''
 })
 
 const registerRules = {
-  userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  userName: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度为3-20位', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度为6-20位', trigger: 'blur' }
+  ],
+  realName: [
+    { required: true, message: '请输入真实姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '姓名长度为2-20位', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { len: 11, message: '手机号必须为11位', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
+  ]
 }
 
 const handleRegister = async () => {
