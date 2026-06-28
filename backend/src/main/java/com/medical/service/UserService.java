@@ -3,7 +3,10 @@ package com.medical.service;
 import com.medical.entity.User;
 import com.medical.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
@@ -21,17 +24,13 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
     
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
     /**
      * 创建用户
      */
     public User createUser(User user) {
-        if (userRepository.existsByUserName(user.getUserName())) {
+        if (userRepository.existsByUserName(user.getUserName()) != null && userRepository.existsByUserName(user.getUserName()) > 0) {
             throw new RuntimeException("用户名已存在");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
     
@@ -62,6 +61,14 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    /**
+     * 分页查询用户
+     */
+    public Page<User> getUserPage(int pageNum, int pageSize, String keyword) {
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.DESC, "create_time"));
+        return userRepository.findByKeyword(keyword, pageable);
+    }
     
     /**
      * 更新用户
@@ -84,7 +91,7 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByUserName(userName);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (passwordEncoder.matches(password, user.getPassword())) {
+            if (password.equals(user.getPassword())) {
                 return user;
             }
         }
@@ -98,7 +105,7 @@ public class UserService {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPassword(newPassword);
             userRepository.save(user);
         } else {
             throw new RuntimeException("用户不存在");

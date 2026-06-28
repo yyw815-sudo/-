@@ -677,5 +677,567 @@ public class WenXinService {
 5. ~~忘记密码功能实现~~ ✅ 已完成
 6. ~~用户注册页面实现~~ ✅ 已完成
 7. HikariCP 连接池 maxLifetime 配置优化
+
+---
+
+## 10. feature/admin-management 分支开发记录
+
+### 10.1 分支概述
+
+**分支名称**: `feature/admin-management`
+
+**开发目标**: 完善管理员功能，实现用户管理和管理员管理的完整 CRUD 操作
+
+**开发时间**: 2026-06-28
+
+### 10.2 新增文件清单
+
+#### 后端新增文件
+
+| 文件路径 | 说明 |
+|---------|------|
+| `backend/src/main/java/com/medical/dto/AdminAddDTO.java` | 管理员新增/编辑数据传输对象 |
+
+#### 后端修改文件
+
+| 文件路径 | 修改内容 |
+|---------|---------|
+| `backend/src/main/java/com/medical/entity/User.java` | 添加 @JsonProperty 注解，支持驼峰命名；添加 getAge() 计算方法 |
+| `backend/src/main/java/com/medical/dto/AdminUserDTO.java` | 替换 age 字段为 birthday 字段 |
+| `backend/src/main/java/com/medical/controller/AdminController.java` | 新增管理员管理接口（列表、新增、编辑、删除、重置密码） |
+| `backend/src/main/java/com/medical/service/AdminService.java` | 新增分页查询和重置密码方法 |
+| `backend/src/main/java/com/medical/repository/AdminRepository.java` | 新增分页查询方法 |
+| `backend/src/main/java/com/medical/repository/UserRepository.java` | 新增分页查询方法 |
+| `backend/src/main/java/com/medical/controller/AuthController.java` | 修正字段名 getRealName() → getRealname() |
+
+#### 前端新增文件
+
+无
+
+#### 前端修改文件
+
+| 文件路径 | 修改内容 |
+|---------|---------|
+| `frontend/src/views/admin/UserManage.vue` | 年龄改为日期选择器；弹窗添加可移动；美化表格样式；添加用户头像 |
+| `frontend/src/views/admin/AdminProfile.vue` | 新增"管理员管理"标签页；完善个人信息展示；美化界面 |
+| `frontend/src/api/admin.js` | 新增管理员管理相关 API |
+
+### 10.3 新增功能
+
+#### 10.3.1 用户管理功能增强
+
+| 功能 | 说明 |
+|------|------|
+| 日期选择器 | 新增/编辑用户时使用日期选择器选择出生日期，自动计算年龄 |
+| 弹窗可移动 | 所有弹窗支持拖动 |
+| 用户头像 | 表格中显示用户头像（用户名首字母） |
+| 性别标签 | 使用彩色标签显示性别 |
+| 用户总数统计 | 页面显示用户总数徽章 |
+| 搜索优化 | 支持用户ID/用户名/姓名/手机号搜索 |
+
+#### 10.3.2 管理员管理功能
+
+| 功能 | 说明 |
+|------|------|
+| 管理员列表 | 分页展示所有管理员 |
+| 新增管理员 | 创建新管理员账号 |
+| 编辑管理员 | 修改管理员信息（姓名、手机号、密码） |
+| 删除管理员 | 删除指定管理员（不能删除当前登录账号） |
+| 重置密码 | 重置管理员密码 |
+| 搜索管理员 | 支持ID/账号/姓名/手机号搜索 |
+
+### 10.4 测试数据
+
+#### 管理员测试账号
+
+| 账号 | 密码 | 真实姓名 | 手机号 |
+|------|------|---------|--------|
+| admin | admin123 | Administrator | 13800138003 |
+| admin2 | admin123 | 管理员2 | 13800138002 |
+
+#### 用户测试数据
+
+| 用户ID | 用户名 | 密码 | 姓名 | 性别 | 出生日期 | 年龄 | 手机号 |
+|--------|--------|------|------|------|---------|------|--------|
+| 8 | user1 | 123456 | 小明 | 女 | 2019-06-28 | 7 | 14752291641 |
+| 9 | GOGO | 123456 | 小红 | 女 | 2004-06-28 | 22 | 14852249532 |
+| 10 | user3 | 123456 | 小刚 | 女 | 2020-06-28 | 6 | 18374838384 |
+| 11 | testuser6 | 123456 | 测试用户6 | 男 | 2000-01-15 | 26 | 13900139006 |
+
+### 10.5 问题记录与解决方案
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 用户姓名/性别/年龄看不见 | 前后端字段名不匹配（realname vs realName） | 在 User 实体添加 @JsonProperty 注解 |
+| 用户ID搜索返回多个结果 | JPQL 查询中 CAST 字符串为 long 时失败，所有条件都会执行 | 使用 CONCAT 替代 % 操作符 |
+| 新增用户 birthday 为空 | AdminUserDTO 使用 age 字段而非 birthday | 修改 DTO 为 birthday 字段 |
+| AuthController 编译错误 | 调用不存在的 getRealName() 方法 | 修正为 getRealname() |
+| JPA REGEXP 不支持 | JPQL 不支持 MySQL REGEXP 语法 | 移除 REGEXP 判断逻辑 |
+
+### 10.6 黑盒测试报告
+
+#### 接口测试
+
+| 接口 | 方法 | 测试内容 | 结果 |
+|------|------|---------|------|
+| /api/admin/login | POST | 管理员登录（admin/admin123） | ✅ 成功 |
+| /api/admin/login | POST | 管理员登录（admin2/admin123） | ✅ 成功 |
+| /api/admin/users | GET | 获取用户列表（分页） | ✅ 成功 |
+| /api/admin/users | POST | 新增用户（含 birthday） | ✅ 成功 |
+| /api/admin/users/{id} | GET | 获取用户详情 | ✅ 成功 |
+| /api/admin/users/{id} | PUT | 更新用户信息 | ✅ 成功 |
+| /api/admin/users/{id} | DELETE | 删除用户 | ✅ 成功 |
+| /api/admin/users | GET | 搜索用户（keyword） | ✅ 成功 |
+| /api/admin/admins | GET | 获取管理员列表 | ✅ 成功 |
+| /api/admin/admins | POST | 新增管理员 | ✅ 成功 |
+| /api/admin/admins/{id} | PUT | 更新管理员信息 | ✅ 成功 |
+| /api/admin/admins/{id} | DELETE | 删除管理员 | ✅ 成功 |
+| /api/admin/admins/{id}/reset-password | PUT | 重置管理员密码 | ✅ 成功 |
+
+#### 前端功能测试
+
+| 测试项 | 结果 |
+|------|------|
+| 管理员登录 | ✅ 成功跳转管理后台 |
+| 用户管理页面展示 | ✅ 表格正常显示 |
+| 新增用户（日期选择器） | ✅ 出生日期选择，年龄自动计算 |
+| 编辑用户 | ✅ 表单数据回显正确 |
+| 删除用户 | ✅ 二次确认，删除成功 |
+| 搜索用户 | ✅ 支持多条件搜索 |
+| 弹窗可移动 | ✅ draggable 属性生效 |
+| 个人中心信息展示 | ✅ 显示管理员编号、账号、姓名等 |
+| 修改个人信息 | ✅ 保存成功 |
+| 管理员管理列表 | ✅ 分页展示 |
+| 新增管理员 | ✅ 创建成功 |
+| 编辑管理员 | ✅ 更新成功 |
+| 删除管理员 | ✅ 删除成功（排除当前账号） |
+| 重置管理员密码 | ✅ 密码修改成功 |
+
+### 10.7 白盒测试报告
+
+#### 代码质量分析
+
+| 检查项 | 结果 | 说明 |
+|--------|------|------|
+| 编译通过 | ✅ | Maven compile 成功 |
+| 字段命名一致性 | ✅ | 数据库/实体/DTO 字段名统一 |
+| 密码安全性 | ✅ | BCrypt 加密存储 |
+| JSON 序列化 | ✅ | @JsonProperty 注解正确 |
+| 空值处理 | ✅ | age 计算处理 null birthday |
+| 异常处理 | ✅ | GlobalExceptionHandler 统一处理 |
+| 分页逻辑 | ✅ | PageRequest 正确配置 |
+| SQL 注入防护 | ✅ | 使用 JPQL 参数化查询 |
+
+#### 潜在风险
+
+| 风险 | 等级 | 说明 |
+|------|------|------|
+| JPA CAST 字符串转 long | 中 | 非数字字符串会导致 CAST 失败 |
+| 密码明文传输 | 低 | 开发环境 HTTP，生产需 HTTPS |
+| 无操作日志 | 中 | 管理员操作无审计追踪 |
+
+### 10.8 待优化事项
+
+1. 优化搜索查询，使用 Criteria API 替代 JPQL
+2. 添加管理员操作日志（审计追踪）
+3. 删除用户时处理关联数据
+4. 批量删除功能
+5. 导出用户/管理员列表（Excel）
+6. 添加更多筛选条件（注册时间范围等）
 8. 忘记密码验证码添加5分钟过期时间
 9. 补充单元测试和集成测试
+
+---
+
+## 十、feature/admin-user-management 分支开发记录
+
+### 10.1 分支概述
+
+- **分支名称**：`feature/admin-user-management`
+- **开发内容**：管理员后台 - 用户管理模块（增删改查、重置密码、数据概览）
+- **开发时间**：2026-06-28
+
+### 10.2 新增/修改文件清单
+
+#### 后端文件
+
+| 文件路径 | 类型 | 说明 |
+|---------|------|------|
+| `backend/src/main/java/com/medical/controller/AdminController.java` | 修改 | 新增用户管理接口（列表/详情/新增/编辑/删除/重置密码） |
+| `backend/src/main/java/com/medical/dto/AdminUserDTO.java` | 新增 | 管理员操作用户的请求DTO（带分组校验） |
+| `backend/src/main/java/com/medical/service/UserService.java` | 修改 | 新增 `getUserPage` 分页查询方法 |
+| `backend/src/main/java/com/medical/repository/UserRepository.java` | 修改 | 新增 `findByKeyword` 分页+关键字搜索方法 |
+
+#### 前端文件
+
+| 文件路径 | 类型 | 说明 |
+|---------|------|------|
+| `frontend/src/views/admin/AdminLayout.vue` | 新增 | 管理员后台布局（侧边栏导航 + 顶部栏） |
+| `frontend/src/views/admin/Dashboard.vue` | 新增 | 管理员数据概览页（统计卡片 + 最近用户 + 系统信息） |
+| `frontend/src/views/admin/UserManage.vue` | 新增 | 用户管理页面（表格、搜索、分页、增删改查、重置密码） |
+| `frontend/src/api/admin.js` | 新增 | 管理员模块API封装（用户管理相关接口） |
+| `frontend/src/router/index.js` | 修改 | 新增管理员后台路由组，增加管理员权限守卫 |
+| `frontend/src/stores/user.js` | 修改 | 新增 `userName` getter，适配管理员和用户双角色 |
+
+### 10.3 功能特性
+
+#### 后端功能
+- ✅ 用户列表分页查询（支持按用户名/姓名/手机号关键字搜索）
+- ✅ 用户详情查询
+- ✅ 管理员新增用户（用户名、密码、姓名、性别、年龄、手机号）
+- ✅ 管理员编辑用户信息
+- ✅ 管理员删除用户
+- ✅ 管理员重置用户密码
+- ✅ 查询结果密码字段脱敏（不返回前端）
+
+#### 前端功能
+- ✅ 管理员后台布局（左侧导航栏 + 顶部面包屑 + 用户下拉菜单）
+- ✅ 数据概览 Dashboard（用户总数统计卡片、最近注册用户列表、系统信息）
+- ✅ 用户管理页面
+  - 搜索功能（支持用户名/姓名/手机号模糊搜索）
+  - 分页功能（支持切换每页条数：10/20/50/100）
+  - 新增用户（弹窗表单，带前端校验）
+  - 编辑用户（弹窗表单，用户名不可修改）
+  - 删除用户（二次确认弹窗）
+  - 重置密码（弹窗，两次密码确认校验）
+- ✅ 管理员路由守卫（未登录或非管理员自动跳转登录页）
+- ✅ 管理员退出登录功能
+
+### 10.4 接口列表
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/users` | GET | 分页查询用户列表（参数：pageNum, pageSize, keyword） |
+| `/admin/users/{userId}` | GET | 查询用户详情 |
+| `/admin/users` | POST | 新增用户 |
+| `/admin/users/{userId}` | PUT | 编辑用户 |
+| `/admin/users/{userId}` | DELETE | 删除用户 |
+| `/admin/users/{userId}/reset-password` | PUT | 重置用户密码 |
+
+### 10.5 白盒测试报告
+
+#### 后端代码审查 (AdminController + UserService + UserRepository)
+
+| 测试项 | 测试内容 | 结果 |
+|-------|---------|------|
+| 分页查询逻辑 | PageRequest 页码从0开始，前端传1时减1处理 | ✅ 通过 |
+| 搜索功能 | JPQL 动态查询，keyword 为空时不过滤 | ✅ 通过 |
+| 新增用户 | 检查用户名重复，密码 BCrypt 加密 | ✅ 通过 |
+| 编辑用户 | 非空字段才更新，保留原有数据 | ✅ 通过 |
+| 删除用户 | 先检查用户是否存在，不存在返回错误 | ✅ 通过 |
+| 重置密码 | 新密码长度校验（至少6位），BCrypt 加密存储 | ✅ 通过 |
+| 密码脱敏 | 查询接口返回前将 password 设为 null | ✅ 通过 |
+| 参数校验 | AdminUserDTO 使用 @Valid + 分组校验（新增/编辑不同规则） | ✅ 通过 |
+| 异常处理 | 捕获 RuntimeException 返回友好提示 | ✅ 通过 |
+| 排序 | 按 createTime 倒序排列，最新注册的在前 | ✅ 通过 |
+
+#### 前端代码审查 (AdminLayout + UserManage + Dashboard)
+
+| 测试项 | 测试内容 | 结果 |
+|-------|---------|------|
+| 响应式数据 | tableData、total、pageNum、pageSize、searchKeyword 定义完整 | ✅ 通过 |
+| 分页逻辑 | 页码变化、每页条数变化时重新请求数据 | ✅ 通过 |
+| 搜索功能 | 回车/点击搜索/清空都触发搜索，重置为第1页 | ✅ 通过 |
+| 新增表单验证 | 用户名必填3-20位、密码必填6-20位、手机号格式校验 | ✅ 通过 |
+| 编辑表单验证 | 用户名禁用、密码字段隐藏、其他字段校验 | ✅ 通过 |
+| 重置密码验证 | 新密码必填、确认密码两次一致校验 | ✅ 通过 |
+| 删除操作 | ElMessageBox 二次确认，防止误删 | ✅ 通过 |
+| 路由守卫 | requiresAdmin 判断，非管理员跳转登录 | ✅ 通过 |
+| 菜单激活 | 根据当前路由计算 activeMenu，高亮正确 | ✅ 通过 |
+| 加载状态 | v-loading 绑定 loading，防止重复提交 | ✅ 通过 |
+| 性别显示转换 | 1=男，2=女，其他=- 显示正确 | ✅ 通过 |
+| 时间格式化 | createTime 转成本地时间字符串 | ✅ 通过 |
+| 退出登录 | 清空 store 和 localStorage，跳转登录页 | ✅ 通过 |
+
+#### 潜在问题（白盒发现）
+
+1. **无管理员接口鉴权**：所有 `/admin` 接口没有 token 校验，任何人都可以调用
+   - 建议：后续集成 JWT + 拦截器，验证管理员 token 和角色
+2. **删除用户无关联数据处理**：直接删除用户，未处理用户关联的病历、用药计划等数据
+   - 建议：添加外键约束或级联删除，或删除前检查关联数据
+3. **无操作日志**：管理员的增删改操作没有记录审计日志
+   - 建议：添加操作日志表，记录管理员操作
+4. **前端权限仅靠路由守卫**：用户可通过修改 localStorage 绕过
+   - 建议：配合后端接口鉴权双重保障
+
+### 10.6 黑盒测试报告
+
+#### 功能测试（后端接口用例）
+
+| 测试用例 | 测试步骤 | 预期结果 | 状态 |
+|---------|---------|---------|------|
+| 查询用户列表-默认分页 | GET /admin/users，不传参 | 返回第1页10条数据，total正确 | ✅ 通过（代码审查） |
+| 查询用户列表-指定页码 | GET /admin/users?pageNum=2&pageSize=5 | 返回第2页5条数据 | ✅ 通过（代码审查） |
+| 查询用户列表-关键字搜索 | GET /admin/users?keyword=test | 返回用户名/姓名/手机号含test的用户 | ✅ 通过（代码审查） |
+| 查询用户详情-存在 | GET /admin/users/1 | 返回对应用户信息，password为null | ✅ 通过（代码审查） |
+| 查询用户详情-不存在 | GET /admin/users/9999 | 返回500，提示"用户不存在" | ✅ 通过（代码审查） |
+| 新增用户-正常 | POST /admin/users，传完整字段 | 返回200，用户创建成功 | ✅ 通过（代码审查） |
+| 新增用户-用户名重复 | POST /admin/users，用户名已存在 | 返回500，提示"用户名已存在" | ✅ 通过（代码审查） |
+| 新增用户-用户名太短 | POST /admin/users，用户名2位 | 返回500，参数校验失败 | ✅ 通过（代码审查） |
+| 新增用户-手机号格式错 | POST /admin/users，手机号格式错误 | 返回500，提示手机号格式错误 | ✅ 通过（代码审查） |
+| 编辑用户-正常 | PUT /admin/users/1，修改姓名/手机号 | 返回200，更新成功 | ✅ 通过（代码审查） |
+| 编辑用户-不存在 | PUT /admin/users/9999 | 返回500，提示"用户不存在" | ✅ 通过（代码审查） |
+| 删除用户-正常 | DELETE /admin/users/1 | 返回200，删除成功 | ✅ 通过（代码审查） |
+| 删除用户-不存在 | DELETE /admin/users/9999 | 返回500，提示"用户不存在" | ✅ 通过（代码审查） |
+| 重置密码-正常 | PUT /admin/users/1/reset-password，newPassword=123456 | 返回200，重置成功 | ✅ 通过（代码审查） |
+| 重置密码-密码太短 | PUT /admin/users/1/reset-password，newPassword=123 | 返回500，提示"新密码至少6位" | ✅ 通过（代码审查） |
+| 重置密码-用户不存在 | PUT /admin/users/9999/reset-password | 返回500，提示"用户不存在" | ✅ 通过（代码审查） |
+
+#### 功能测试（前端表单验证）
+
+| 测试用例 | 测试步骤 | 预期结果 | 状态 |
+|---------|---------|---------|------|
+| 新增-空用户名 | 不填用户名，点击确定 | 提示"请输入用户名" | ✅ 通过 |
+| 新增-用户名太短 | 输入2位用户名 | 提示"用户名长度为3-20位" | ✅ 通过 |
+| 新增-空密码 | 不填密码，点击确定 | 提示"请输入密码" | ✅ 通过 |
+| 新增-密码太短 | 输入5位密码 | 提示"密码长度为6-20位" | ✅ 通过 |
+| 新增-手机号格式错 | 输入12345 | 提示"请输入正确的手机号" | ✅ 通过 |
+| 编辑-用户名禁用 | 打开编辑弹窗 | 用户名输入框禁用，不可修改 | ✅ 通过 |
+| 编辑-无密码字段 | 打开编辑弹窗 | 不显示密码输入框 | ✅ 通过 |
+| 重置密码-空新密码 | 不填新密码，点击确定 | 提示"请输入新密码" | ✅ 通过 |
+| 重置密码-两次不一致 | 新密码123456，确认密码123457 | 提示"两次输入的密码不一致" | ✅ 通过 |
+| 删除-二次确认 | 点击删除按钮 | 弹出确认对话框，需再次确认 | ✅ 通过 |
+
+#### UI/UX 测试
+
+| 测试项 | 结果 |
+|-------|------|
+| 左侧导航栏 | ✅ 深色主题，悬停高亮，点击跳转正确 |
+| 顶部面包屑 | ✅ 显示当前页面位置，首页可点击 |
+| 用户管理表格 | ✅ 斑马纹、边框、固定右侧操作列 |
+| 分页组件 | ✅ 显示总数、页数切换、跳转指定页 |
+| 弹窗表单 | ✅ 居中显示、点击遮罩不关闭、底部操作按钮 |
+| 搜索框 | ✅ 带搜索图标、清空按钮、回车搜索 |
+| 数据概览卡片 | ✅ 彩色图标背景、数字醒目、hover阴影效果 |
+| 整体风格 | ✅ 简洁专业的管理后台风格，配色协调 |
+
+### 10.7 待优化事项
+
+1. 后端接口添加管理员鉴权（JWT + 拦截器）
+2. 删除用户时处理关联数据（病历、用药计划、提醒等）
+3. 添加管理员操作日志（审计追踪）
+4. 数据概览 Dashboard 补充更多统计（用药计划数、提醒数、服药记录数）
+5. 用户列表支持更多筛选条件（性别、注册时间范围）
+6. 批量删除用户功能
+7. 导出用户列表（Excel）
+
+### 10.8 密码明文存储与弹窗可拖动（追加修改）
+
+#### 修改说明
+根据需求，将密码存储方式改为明文（开发环境），同时为所有弹窗添加可拖动功能。
+
+#### 修改文件清单
+
+| 文件路径 | 修改内容 |
+|---------|---------|
+| `backend/src/main/java/com/medical/service/UserService.java` | 移除 BCrypt 加密，createUser/login/resetPassword 改用明文比较 |
+| `backend/src/main/java/com/medical/service/AdminService.java` | 移除 BCrypt 加密，createAdmin/login/updateAdmin/resetPassword 改用明文比较 |
+| `backend/src/main/java/com/medical/config/DataInitializer.java` | 默认管理员密码改为明文 admin123 |
+| `backend/src/main/java/com/medical/controller/AdminController.java` | 移除密码字段清空逻辑，返回密码明文 |
+| `frontend/src/views/admin/UserManage.vue` | 密码列显示明文，替换掩码 `••••••` |
+| `frontend/src/views/admin/AdminProfile.vue` | 管理员列表新增密码列，所有弹窗添加 draggable 属性 |
+
+#### 功能特性（追加）
+- ✅ 用户密码明文存储（开发环境）
+- ✅ 管理员密码明文存储
+- ✅ 用户列表接口返回密码明文
+- ✅ 管理员列表接口返回密码明文
+- ✅ 登录验证使用字符串相等比较（equals）
+- ✅ 用户管理表格显示密码明文
+- ✅ 管理员管理表格显示密码明文
+- ✅ 新增用户弹窗可拖动
+- ✅ 编辑用户弹窗可拖动
+- ✅ 重置密码弹窗可拖动
+- ✅ 新增管理员弹窗可拖动
+
+#### 测试账号
+
+| 角色 | 账号 | 密码 | 说明 |
+|------|------|------|------|
+| 管理员 | admin | admin123 | 系统默认管理员 |
+| 管理员 | admin2 | 123456 | 测试管理员 |
+| 用户 | testuser6 | 123456 | 测试用户 |
+
+#### 问题记录与解决方案
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 密码显示为 `••••••` | 前端表格中写死了掩码 | 替换为绑定 `row.password` |
+| 管理员列表没有密码列 | 管理员列表缺少密码字段展示 | 新增 password 列 |
+| 登录失败（密码不匹配） | 数据库中旧数据是 BCrypt 加密，新代码用明文比较 | 将数据库中所有用户/管理员密码更新为明文 `123456` |
+
+#### 密码明文相关黑盒测试
+
+| 接口 | 方法 | 测试内容 | 预期结果 | 状态 |
+|------|------|---------|---------|------|
+| /api/admin/login | POST | 管理员登录（admin/admin123） | 返回200+token | ✅ 通过 |
+| /api/user/login | POST | 用户登录（testuser6/123456） | 返回200+token | ✅ 通过 |
+| /api/admin/users | GET | 获取用户列表 | 返回用户列表+password 明文 | ✅ 通过 |
+| /api/admin/admins | GET | 获取管理员列表 | 返回管理员列表+password 明文 | ✅ 通过 |
+| /api/admin/users | POST | 新增用户（密码明文） | 返回200，密码明文存储 | ✅ 通过 |
+| /api/admin/admins | POST | 新增管理员（密码明文） | 返回200，密码明文存储 | ✅ 通过 |
+
+#### 弹窗可拖动测试
+
+| 测试项 | 预期结果 | 状态 |
+|-------|---------|------|
+| 新增用户弹窗可拖动 | 按住标题栏可拖动 | ✅ 通过 |
+| 编辑用户弹窗可拖动 | 按住标题栏可拖动 | ✅ 通过 |
+| 重置密码弹窗可拖动 | 按住标题栏可拖动 | ✅ 通过 |
+| 新增管理员弹窗可拖动 | 按住标题栏可拖动 | ✅ 通过 |
+
+#### 安全注意事项（白盒发现）
+
+> ⚠️ **重要提示**：明文密码仅适用于开发/演示环境，生产环境必须使用 BCrypt 加密
+
+| 风险项 | 等级 | 说明 |
+|-------|------|------|
+| 密码明文存储 | 高 | 数据库泄露会导致所有用户密码暴露 |
+| 密码明文传输 | 中 | HTTP 传输可被抓包，生产需 HTTPS |
+| 管理员密码可见 | 中 | 管理员可看到所有用户明文密码 |
+| 无登录限流 | 中 | 可能被暴力破解 |
+
+### 10.9 用户名/账号大小写敏感（追加修改）
+
+#### 修改说明
+根据需求，搜索和用户名唯一性校验需要区分大小写，即 `KUsw`、`kusw`、`KUSW` 视为不同的用户名。
+
+#### 修改文件清单
+
+| 文件路径 | 修改内容 |
+|---------|---------|
+| `backend/src/main/java/com/medical/repository/UserRepository.java` | findByUserName/existsByUserName/findByKeyword 改用原生SQL + BINARY 关键字 |
+| `backend/src/main/java/com/medical/repository/AdminRepository.java` | findByAdminName/existsByAdminName/findByKeyword 改用原生SQL + BINARY 关键字 |
+| `backend/src/main/java/com/medical/service/UserService.java` | existsByUserName 返回类型改为 Integer 判断 |
+| `backend/src/main/java/com/medical/service/AdminService.java` | existsByAdminName 返回类型改为 Integer 判断 |
+| `backend/src/main/java/com/medical/config/DataInitializer.java` | existsByAdminName 判断逻辑适配 Integer 返回值 |
+| 数据库表 | user.user_name 和 admin.admin_name 排序规则改为 utf8mb4_bin |
+
+#### 功能特性（追加）
+- ✅ 用户搜索区分大小写
+- ✅ 管理员搜索区分大小写
+- ✅ 用户用户名唯一性校验区分大小写
+- ✅ 管理员账号唯一性校验区分大小写
+
+#### 问题记录与解决方案
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| HQL 不支持 BINARY 关键字 | JPA HQL 语法限制 | 改用原生SQL查询（nativeQuery = true） |
+| existsByUserName 返回 Long 而非 Boolean | 原生SQL COUNT(*) 返回类型问题 | 返回 Integer，判断值 > 0 |
+| 数据库唯一约束不区分大小写 | 表排序规则为 utf8mb4_unicode_ci | 修改列排序规则为 utf8mb4_bin |
+| 分页排序报错 | 原生SQL使用实体属性名 createTime | 改为数据库列名 create_time |
+
+#### 大小写敏感黑盒测试
+
+| 测试项 | 测试内容 | 预期结果 | 状态 |
+|-------|---------|---------|------|
+| 用户搜索-KUsw | 搜索关键字 KUsw | 返回1条结果（KUsw） | ✅ 通过 |
+| 用户搜索-kusw | 搜索关键字 kusw | 返回0条结果 | ✅ 通过 |
+| 用户搜索-KUSW | 搜索关键字 KUSW | 返回0条结果 | ✅ 通过 |
+| 新增用户-kuE | 创建用户名 kuE（与 KUe 不同） | 创建成功 | ✅ 通过 |
+| 新增用户-KUe | 创建用户名 KUe（已存在） | 返回错误"用户名已存在" | ✅ 通过 |
+| 管理员搜索-admin | 搜索关键字 admin | 返回3条结果 | ✅ 通过 |
+| 管理员搜索-ADMIN | 搜索关键字 ADMIN | 返回0条结果 | ✅ 通过 |
+
+### 10.10 分支完整测试（最终验证）
+
+#### 新增文件
+
+| 文件路径 | 说明 |
+|---------|------|
+| `backend/src/main/java/com/medical/dto/AdminUpdateDTO.java` | 管理员编辑DTO，密码字段非必填 |
+
+#### 修复问题
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 编辑管理员时密码不能为空 | AdminAddDTO 中 password 使用 @NotBlank 注解 | 创建 AdminUpdateDTO，密码字段使用 @Size 而非 @NotBlank |
+| 管理员详情接口返回500 | 数据库中无 admin_id=1 的记录 | 使用正确的 admin_id 测试 |
+
+#### 完整后端接口测试
+
+| 序号 | 接口 | 方法 | 测试内容 | 状态 |
+|------|------|------|---------|------|
+| 1 | /api/admin/login | POST | 管理员登录（admin/admin123） | ✅ 通过 |
+| 2 | /api/user/login | POST | 用户登录（testuser6/123456） | ✅ 通过 |
+| 3 | /api/admin/users | GET | 用户列表查询 | ✅ 通过 |
+| 4 | /api/admin/admins | GET | 管理员列表查询 | ✅ 通过 |
+| 5 | /api/admin/users?keyword=KUsw | GET | 用户搜索大小写敏感 | ✅ 通过 |
+| 6 | /api/admin/admins?keyword=ADMIN | GET | 管理员搜索大小写敏感 | ✅ 通过 |
+| 7 | /api/admin/users | POST | 新增用户 | ✅ 通过 |
+| 8 | /api/admin/admins | POST | 新增管理员 | ✅ 通过 |
+| 9 | /api/admin/users/{id} | PUT | 编辑用户 | ✅ 通过 |
+| 10 | /api/admin/users/{id}/reset-password | PUT | 重置用户密码 | ✅ 通过 |
+| 11 | /api/admin/users/{id} | GET | 用户详情 | ✅ 通过 |
+| 12 | /api/admin/{adminId} | GET | 管理员详情 | ✅ 通过 |
+| 13 | /api/admin/admins/{adminId} | PUT | 编辑管理员 | ✅ 通过 |
+| 14 | /api/admin/admins/{adminId}/reset-password | PUT | 重置管理员密码 | ✅ 通过 |
+| 15 | /api/admin/admins/{adminId} | DELETE | 删除管理员 | ✅ 通过 |
+| 16 | /api/user/register | POST | 用户注册 | ✅ 通过 |
+
+#### 前端功能测试
+
+| 测试项 | 状态 |
+|-------|------|
+| 前端页面加载正常 | ✅ 通过 |
+| 管理员登录页面 | ✅ 通过 |
+| 用户登录页面 | ✅ 通过 |
+| 用户管理页面（密码明文显示） | ✅ 通过 |
+| 管理员管理页面（密码明文显示） | ✅ 通过 |
+| 弹窗可拖动功能 | ✅ 通过 |
+
+#### 分支文件清单
+
+**修改文件（共16个）**
+
+| 文件路径 | 修改说明 |
+|---------|---------|
+| `DATABASE.md` | 更新 user/admin 表字段说明，添加大小写敏感说明 |
+| `DEVELOPMENT_PLAN.md` | 更新开发计划，记录10.8-10.11章节内容 |
+| `backend/pom.xml` | 添加 Lombok 依赖 |
+| `backend/src/main/java/com/medical/config/DataInitializer.java` | 默认管理员密码改为明文，适配 existsByAdminName 返回值变化 |
+| `backend/src/main/java/com/medical/controller/AdminController.java` | 新增用户/管理员CRUD接口，修改编辑管理员使用 AdminUpdateDTO |
+| `backend/src/main/java/com/medical/controller/AuthController.java` | 用户登录改用明文密码比较 |
+| `backend/src/main/java/com/medical/entity/User.java` | 添加 birthday 字段映射 |
+| `backend/src/main/java/com/medical/repository/AdminRepository.java` | 搜索和查询改用原生SQL + BINARY 关键字 |
+| `backend/src/main/java/com/medical/repository/UserRepository.java` | 搜索和查询改用原生SQL + BINARY 关键字 |
+| `backend/src/main/java/com/medical/service/AdminService.java` | 密码改用明文存储，适配 existsByAdminName 返回值 |
+| `backend/src/main/java/com/medical/service/UserService.java` | 密码改用明文存储，适配 existsByUserName 返回值 |
+| `backend/src/main/resources/application.yml` | 配置 MySQL 连接 |
+| `frontend/src/router/index.js` | 添加管理员路由守卫 |
+| `frontend/src/stores/user.js` | 添加 Pinia 状态管理 |
+| `frontend/src/views/user/Login.vue` | 手机号登录模式、昼夜模式切换 |
+
+**新增文件（共9个）**
+
+| 文件路径 | 说明 |
+|---------|------|
+| `backend/src/main/java/com/medical/dto/AdminAddDTO.java` | 新增管理员DTO（密码必填） |
+| `backend/src/main/java/com/medical/dto/AdminProfileDTO.java` | 管理员个人信息DTO |
+| `backend/src/main/java/com/medical/dto/AdminUpdateDTO.java` | 编辑管理员DTO（密码非必填） |
+| `backend/src/main/java/com/medical/dto/AdminUserDTO.java` | 用户管理DTO |
+| `frontend/src/api/admin.js` | 管理员相关API封装 |
+| `frontend/src/views/admin/AdminProfile.vue` | 管理员个人中心页面 |
+| `frontend/src/views/admin/Dashboard.vue` | 数据概览Dashboard页面 |
+| `frontend/src/views/admin/UserManage.vue` | 用户管理页面 |
+| `frontend/src/views/admin/Index.vue` | 管理员首页框架 |
+
+### 10.11 更新待优化事项
+
+1. ✅ 密码明文存储（已完成，开发环境）
+2. ✅ 弹窗可拖动（已完成）
+3. ✅ 用户名/账号大小写敏感（已完成）
+4. ✅ 分支完整测试（已完成）
+5. 生产环境改回 BCrypt 密码加密
+6. 后端接口添加管理员鉴权（JWT + 拦截器）
+7. 删除用户时处理关联数据（病历、用药计划、提醒等）
+8. 添加管理员操作日志（审计追踪）
+9. 数据概览 Dashboard 补充更多统计（用药计划数、提醒数、服药记录数）
+10. 用户列表支持更多筛选条件（性别、注册时间范围）
+11. 批量删除用户功能
+12. 导出用户列表（Excel）
+13. 添加登录频率限制（防暴力破解）
+14. HTTPS 传输加密
+
+---

@@ -61,7 +61,7 @@ public class AuthController {
         Map<String, Object> data = new HashMap<>();
         data.put("userId", user.getUserId());
         data.put("userName", user.getUserName());
-        data.put("realname", user.getRealName());
+        data.put("realname", user.getRealname());
         data.put("phone", user.getPhone());
         data.put("token", "mock-phone-token-" + user.getUserId());
         return Result.success("登录成功", data);

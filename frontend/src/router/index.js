@@ -63,6 +63,45 @@ const routes = [
         meta: { title: '家庭协作', requiresAuth: true }
       }
     ]
+  },
+  {
+    path: '/admin',
+    name: 'AdminLayout',
+    component: () => import('@/views/admin/AdminLayout.vue'),
+    redirect: '/admin/dashboard',
+    meta: { title: '管理后台', requiresAdmin: true },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/Dashboard.vue'),
+        meta: { title: '数据概览', requiresAdmin: true }
+      },
+      {
+        path: 'user-manage',
+        name: 'UserManage',
+        component: () => import('@/views/admin/UserManage.vue'),
+        meta: { title: '用户管理', requiresAdmin: true }
+      },
+      {
+        path: 'profile',
+        name: 'AdminProfile',
+        component: () => import('@/views/admin/AdminProfile.vue'),
+        meta: { title: '个人中心', requiresAdmin: true }
+      },
+      {
+        path: 'reminder-manage',
+        name: 'ReminderManage',
+        component: () => import('@/views/reminder/Reminder.vue'),
+        meta: { title: '提醒管理', requiresAdmin: true }
+      },
+      {
+        path: 'family-manage',
+        name: 'FamilyManage',
+        component: () => import('@/views/family/Family.vue'),
+        meta: { title: '家庭协作', requiresAdmin: true }
+      }
+    ]
   }
 ]
 
@@ -77,7 +116,13 @@ router.beforeEach((to, from, next) => {
   
   const userStore = useUserStore()
   
-  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+  if (to.meta.requiresAdmin) {
+    if (!userStore.isLoggedIn || !userStore.isAdmin) {
+      next('/login')
+    } else {
+      next()
+    }
+  } else if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     next('/login')
   } else {
     next()

@@ -431,7 +431,11 @@ const handleLogin = async () => {
         await userStore.login(loginForm)
       }
       ElMessage.success('登录成功')
-      router.push('/home')
+      if (loginForm.role === 'admin') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/home')
+      }
     } catch (error) {
       console.error('登录失败:', error)
     } finally {

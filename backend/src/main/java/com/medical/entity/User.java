@@ -1,9 +1,12 @@
 package com.medical.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 
 /**
  * 用户实体类
@@ -25,6 +28,7 @@ public class User {
     private String password;
 
     @Column(name = "realname", length = 50)
+    @JsonProperty("realName")
     private String realname;
 
     @Column(name = "gender")
@@ -41,6 +45,14 @@ public class User {
 
     @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
+
+    @JsonProperty("age")
+    public Integer getAge() {
+        if (birthday == null) {
+            return null;
+        }
+        return Period.between(birthday, LocalDate.now()).getYears();
+    }
 
     @PrePersist
     protected void onCreate() {

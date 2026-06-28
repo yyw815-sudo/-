@@ -3,7 +3,10 @@ package com.medical.service;
 import com.medical.entity.Admin;
 import com.medical.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -19,17 +22,13 @@ public class AdminService {
     @Autowired
     private AdminRepository adminRepository;
     
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
     /**
      * 创建管理员
      */
     public Admin createAdmin(Admin admin) {
-        if (adminRepository.existsByAdminName(admin.getAdminName())) {
+        if (adminRepository.existsByAdminName(admin.getAdminName()) != null && adminRepository.existsByAdminName(admin.getAdminName()) > 0) {
             throw new RuntimeException("管理员用户名已存在");
         }
-        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return adminRepository.save(admin);
     }
     
@@ -75,10 +74,22 @@ public class AdminService {
         Optional<Admin> adminOpt = adminRepository.findByAdminName(adminName);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
-            if (passwordEncoder.matches(password, admin.getPassword())) {
+            if (password.equals(admin.getPassword())) {
                 return admin;
             }
         }
         return null;
+    }
+
+    public Page<Admin> getAdminPage(int pageNum, int pageSize, String keyword) {
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.DESC, "create_time"));
+        return adminRepository.findByKeyword(keyword, pageable);
+    }
+
+    public void resetPassword(Long adminId, String newPassword) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("管理员不存在"));
+        admin.setPassword(newPassword);
+        adminRepository.save(admin);
     }
 }
