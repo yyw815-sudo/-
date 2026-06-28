@@ -99,21 +99,21 @@ CREATE TABLE medicineinteraction (
 CREATE TABLE medicationplan (
     plan_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
-    record_id BIGINT NOT NULL,
-    medicine_id BIGINT NOT NULL,
-    dosage VARCHAR(50) NOT NULL,
-    frequency VARCHAR(50) NOT NULL,
-    times_per_day INT NOT NULL,
-    interval_hours INT,
-    start_date DATE NOT NULL,
+    record_id BIGINT,
+    medicine_id BIGINT,
+    medicine_name VARCHAR(100),
+    dosage VARCHAR(50),
+    frequency VARCHAR(50),
+    start_date DATE,
     end_date DATE,
     purpose TEXT,
+    notes TEXT,
     status TINYINT DEFAULT 1,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_medicationplan_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_medicationplan_record FOREIGN KEY (record_id) REFERENCES medicalrecord(record_id) ON DELETE CASCADE,
-    CONSTRAINT fk_medicationplan_medicine FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id) ON DELETE CASCADE
+    CONSTRAINT fk_medicationplan_record FOREIGN KEY (record_id) REFERENCES medicalrecord(record_id) ON DELETE SET NULL,
+    CONSTRAINT fk_medicationplan_medicine FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE plan_reminder_time (
@@ -123,23 +123,6 @@ CREATE TABLE plan_reminder_time (
     reason VARCHAR(100),
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_planreminder_plan FOREIGN KEY (plan_id) REFERENCES medicationplan(plan_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE medicationrecord (
-    take_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    plan_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    medicine_id BIGINT NOT NULL,
-    scheduled_time DATETIME NOT NULL,
-    take_time DATETIME,
-    photo_url VARCHAR(255),
-    ai_result TEXT,
-    ai_accuracy DECIMAL(5,2),
-    status TINYINT DEFAULT 0,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_medicationrecord_plan FOREIGN KEY (plan_id) REFERENCES medicationplan(plan_id) ON DELETE CASCADE,
-    CONSTRAINT fk_medicationrecord_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_medicationrecord_medicine FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE reminder (
@@ -168,81 +151,10 @@ CREATE TABLE reminderlog (
     status VARCHAR(20) DEFAULT 'pending',
     response TEXT,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    level INT DEFAULT 1,
     CONSTRAINT fk_reminderlog_reminder FOREIGN KEY (reminder_id) REFERENCES reminder(reminder_id) ON DELETE CASCADE,
     CONSTRAINT fk_reminderlog_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_reminderlog_plan FOREIGN KEY (plan_id) REFERENCES medicationplan(plan_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE reminderstrategy (
-    strategy_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL,
-    level INT NOT NULL,
-    trigger_condition VARCHAR(50),
-    delay_minutes INT NOT NULL,
-    channel VARCHAR(20) NOT NULL,
-    content TEXT,
-    escalate_to VARCHAR(50) DEFAULT 'NO',
-    enabled TINYINT DEFAULT 1,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE familymember (
-    member_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    family_user_id BIGINT NOT NULL,
-    realname VARCHAR(50),
-    phone VARCHAR(20),
-    relation VARCHAR(50),
-    permission_level VARCHAR(20) DEFAULT 'basic',
-    status TINYINT DEFAULT 1,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_familymember_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_familymember_family FOREIGN KEY (family_user_id) REFERENCES user(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE familyauth (
-    auth_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    member_id BIGINT NOT NULL,
-    view_medical_record TINYINT DEFAULT 0,
-    view_medication TINYINT DEFAULT 1,
-    view_statistics TINYINT DEFAULT 1,
-    receive_miss_alert TINYINT DEFAULT 1,
-    receive_emergency TINYINT DEFAULT 1,
-    disconn_alert TINYINT DEFAULT 0,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_familyauth_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_familyauth_member FOREIGN KEY (member_id) REFERENCES familymember(member_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE compliance_statistics (
-    stat_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    medicine_id BIGINT,
-    stat_date DATE NOT NULL,
-    total_doses INT DEFAULT 0,
-    taken_doses INT DEFAULT 0,
-    missed_doses INT DEFAULT 0,
-    compliance_rate DECIMAL(5,2) DEFAULT 0,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_compliance_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_compliance_medicine FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE health_trend (
-    trend_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    data_type VARCHAR(50) NOT NULL,
-    value VARCHAR(50),
-    measure_time DATETIME,
-    source VARCHAR(50) DEFAULT 'manual',
-    remarks TEXT,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_healthtrend_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_reminderlog_plan FOREIGN KEY (plan_id) REFERENCES medicationplan(plan_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE system_announcement (
@@ -268,31 +180,6 @@ CREATE TABLE operation_log (
     user_agent VARCHAR(255),
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_operationlog_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE data_backup (
-    backup_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    backup_name VARCHAR(200) NOT NULL,
-    backup_type VARCHAR(50) DEFAULT 'manual',
-    backup_path VARCHAR(255),
-    backup_size VARCHAR(50),
-    status VARCHAR(20) DEFAULT 'success',
-    backup_time DATETIME,
-    restore_time DATETIME,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE api_config (
-    config_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    api_name VARCHAR(100) NOT NULL,
-    api_type VARCHAR(50) NOT NULL,
-    endpoint VARCHAR(255),
-    app_key VARCHAR(255),
-    app_secret VARCHAR(255),
-    status TINYINT DEFAULT 1,
-    remarks TEXT,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO admin (admin_name, password, realname, phone) VALUES ('admin', 'admin123', 'Administrator', '13800138000');
