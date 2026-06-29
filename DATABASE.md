@@ -227,16 +227,20 @@
 | ------------- | ------------ | ---------------- |
 | member_id     | bigint PK AUTO_INCREMENT | 家属记录编号（主键） |
 | user_id       | bigint FK    | 患者用户ID          |
-| family_user_id| bigint FK    | 家属用户ID（必须是已注册用户） |
+| family_user_id| bigint FK    | 家属用户ID（可为NULL，未关联用户账号） |
 | realname      | varchar(50)  | 家属姓名              |
 | phone         | varchar(20)  | 家属手机号            |
 | relation      | varchar(50)  | 与患者关系（如：子女/配偶/父母） |
-| permission_level| varchar(20) | 授权查看级别（基础/完整/仅提醒） |
+| permission_level| varchar(20) | 授权级别（basic基础/advanced高级） |
 | status        | tinyint      | 状态（1：正常，0：解除关系）  |
 | create_time   | datetime     | 创建时间              |
 | update_time   | datetime     | 更新时间              |
 
-> **重要约束**：family_user_id 必须关联已注册的 user 用户，家属必须先注册账号才能绑定。
+> **说明**：family_user_id 可以为 NULL，表示该家属尚未注册系统账号。已关联用户的家属可以查看其提醒记录。
+>
+> **权限级别说明**：
+> - 基础权限（basic）：查看用药计划、接收漏服提醒（2项）
+> - 高级权限（advanced）：全部6项权限全开
 
 ---
 

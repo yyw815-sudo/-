@@ -1241,3 +1241,339 @@ public class WenXinService {
 14. HTTPS 传输加密
 
 ---
+
+## 11. feature/family-collaboration 分支开发记录
+
+### 11.1 功能特性
+
+| 功能 | 说明 |
+|------|------|
+| 添加家属信息 | 用户可以添加其他用户作为家属，设置关系和权限级别 |
+| 设置家属权限 | 授权家属查看病历、用药计划、统计数据，接收漏服/紧急/断联提醒 |
+| 查看家属列表 | 查看所有已添加的家属成员及状态 |
+| 修改家属信息 | 修改家属姓名、电话、关系、权限级别 |
+| 删除家属信息 | 删除已添加的家属成员，同时删除关联的权限记录 |
+| 查看权限详情 | 查看每个家属的权限配置 |
+
+### 11.2 新增文件
+
+| 文件路径 | 说明 |
+|---------|------|
+| `backend/src/main/java/com/medical/entity/FamilyMember.java` | 家属成员实体类 |
+| `backend/src/main/java/com/medical/entity/FamilyAuth.java` | 家属权限实体类 |
+| `backend/src/main/java/com/medical/dto/FamilyMemberDTO.java` | 家属成员DTO |
+| `backend/src/main/java/com/medical/dto/FamilyAuthDTO.java` | 家属权限DTO |
+| `backend/src/main/java/com/medical/repository/FamilyMemberRepository.java` | 家属成员数据访问层 |
+| `backend/src/main/java/com/medical/repository/FamilyAuthRepository.java` | 家属权限数据访问层 |
+| `backend/src/main/java/com/medical/service/FamilyService.java` | 家庭协作业务逻辑层 |
+| `backend/src/main/java/com/medical/controller/FamilyController.java` | 家庭协作控制器 |
+| `frontend/src/api/family.js` | 家庭协作API封装 |
+| `frontend/src/views/family/Family.vue` | 家庭协作前端页面 |
+
+### 11.3 修改文件
+
+| 文件路径 | 修改说明 |
+|---------|---------|
+| `frontend/src/router/index.js` | 添加家庭协作用户端和管理员端路由 |
+
+### 11.4 数据库表
+
+**familymember 表**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| member_id | bigint | 主键，自增 |
+| user_id | bigint | 用户ID（主用户） |
+| family_user_id | bigint | 家属用户ID |
+| realname | varchar(50) | 家属姓名 |
+| phone | varchar(20) | 联系电话 |
+| relation | varchar(50) | 关系（父母/配偶/子女/兄弟姐妹/其他） |
+| permission_level | varchar(20) | 权限级别（basic/advanced） |
+| status | tinyint | 状态（1正常/0禁用） |
+| create_time | datetime | 创建时间 |
+| update_time | datetime | 更新时间 |
+
+**familyauth 表**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| auth_id | bigint | 主键，自增 |
+| user_id | bigint | 用户ID |
+| member_id | bigint | 家属成员ID |
+| view_medical_record | tinyint | 查看病历记录（0否/1是） |
+| view_medication | tinyint | 查看用药计划（0否/1是） |
+| view_statistics | tinyint | 查看统计数据（0否/1是） |
+| receive_miss_alert | tinyint | 接收漏服提醒（0否/1是） |
+| receive_emergency | tinyint | 接收紧急通知（0否/1是） |
+| disconn_alert | tinyint | 接收断联提醒（0否/1是） |
+| create_time | datetime | 创建时间 |
+| update_time | datetime | 更新时间 |
+
+### 11.5 测试报告
+
+#### 后端接口测试
+
+| 序号 | 接口 | 方法 | 测试内容 | 状态 |
+|------|------|------|---------|------|
+| 1 | /family/members | POST | 添加家属（用户1添加用户2为子女） | ✅ 通过 |
+| 2 | /family/members | GET | 获取家属列表 | ✅ 通过 |
+| 3 | /family/members/{id} | PUT | 修改家属信息（姓名、关系、权限级别） | ✅ 通过 |
+| 4 | /family/auth/{memberId} | GET | 获取权限详情 | ✅ 通过 |
+| 5 | /family/auth | PUT | 更新权限信息（开启所有权限） | ✅ 通过 |
+| 6 | /family/auth | GET | 获取权限列表 | ✅ 通过 |
+| 7 | /family/members/{id} | DELETE | 删除家属 | ✅ 通过 |
+
+#### 前端功能测试
+
+| 测试项 | 状态 |
+|-------|------|
+| 家庭协作页面加载 | ✅ 通过 |
+| 添加家属弹窗 | ✅ 通过 |
+| 修改家属信息弹窗 | ✅ 通过 |
+| 设置权限弹窗 | ✅ 通过 |
+| 删除家属 | ✅ 通过 |
+| 弹窗可拖动 | ✅ 通过 |
+
+### 11.6 问题记录
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 编辑家属返回500 | FamilyMemberDTO 中 familyUserId 使用 @NotNull 校验，编辑时不需要传递 | 修改 FamilyController.updateFamilyMember 方法，移除 @Valid 注解 |
+
+### 11.7 查看家属提醒记录功能（追加）
+
+#### 新增文件
+
+| 文件路径 | 说明 |
+|---------|------|
+| `backend/src/main/java/com/medical/entity/ReminderLog.java` | 提醒日志实体类 |
+| `backend/src/main/java/com/medical/repository/ReminderLogRepository.java` | 提醒日志数据访问层 |
+
+#### 修改文件
+
+| 文件路径 | 修改说明 |
+|---------|---------|
+| `backend/src/main/java/com/medical/service/FamilyService.java` | 新增 getFamilyReminderLogs 方法 |
+| `backend/src/main/java/com/medical/controller/FamilyController.java` | 新增 GET /family/reminders/{memberId} 接口 |
+| `frontend/src/api/family.js` | 新增 getFamilyReminders API封装 |
+| `frontend/src/views/family/Family.vue` | 新增提醒记录弹窗、修复userId获取方式、添加删除确认弹窗 |
+
+#### 功能特性（追加）
+
+- ✅ 查看家属提醒记录（显示家属的用药提醒日志）
+- ✅ 提醒记录列表展示（记录ID、提醒内容、渠道、状态、发送时间、接收时间）
+- ✅ 提醒状态标签（待发送/已发送/已接收/已漏服/发送失败）
+- ✅ userId获取方式优化（从userStore获取而非localStorage）
+- ✅ 删除家属确认弹窗（防止误删）
+- ✅ 编辑表单验证规则分离（新增/编辑使用不同验证规则）
+
+#### 后端接口测试（追加）
+
+| 序号 | 接口 | 方法 | 测试内容 | 状态 |
+|------|------|------|---------|------|
+| 8 | /family/reminders/{memberId} | GET | 查看家属提醒记录 | ✅ 通过 |
+
+#### 前端功能测试（追加）
+
+| 测试项 | 状态 |
+|-------|------|
+| 提醒记录弹窗显示 | ✅ 通过 |
+| 提醒记录列表加载 | ✅ 通过 |
+| 提醒状态标签颜色 | ✅ 通过 |
+| 删除家属二次确认 | ✅ 通过 |
+| userId正确获取 | ✅ 通过 |
+
+#### 白盒测试发现
+
+| 问题 | 等级 | 说明 |
+|------|------|------|
+| 提醒记录为空 | 低 | 新注册用户无提醒数据，符合预期 |
+| userId获取方式 | 已修复 | 从userStore获取userId，避免localStorage不一致 |
+
+### 11.8 待优化事项
+
+1. ✅ 家庭协作基础功能（已完成）
+2. ✅ 查看家属提醒记录（已完成）
+3. 家属操作日志（审计追踪）
+4. 批量添加家属功能
+5. 家属权限模板（快速设置常用权限组合）
+6. 提醒记录分页功能
+7. 提醒记录筛选功能（按状态/时间范围）
+
+---
+
+### 11.9 搜索功能 + 权限级别联动 + UI升级（追加）
+
+#### 新增功能
+
+| 功能 | 说明 |
+|------|------|
+| 搜索家属 | 支持按姓名/电话/关系关键字搜索家属成员 |
+| 查看所有提醒 | 查看所有已关联用户的家属的提醒记录汇总 |
+| 权限级别联动 | 选择基础/高级权限时自动设置对应的6个具体权限 |
+| 家属卡片UI升级 | 卡片式布局、彩色头像、统计卡片、悬浮动效 |
+| 权限预览 | 添加/编辑家属时预览当前权限级别包含的功能 |
+
+#### 修改文件清单
+
+| 文件路径 | 修改说明 |
+|---------|---------|
+| `backend/src/main/java/com/medical/service/FamilyService.java` | 新增 `buildDefaultAuth()`、`updateAuthByPermissionLevel()` 方法，权限级别变更时自动同步具体权限；`getFamilyReminderLogs()` 未关联用户时返回空列表而非抛异常；新增 `getReminderLogsByFamilyUserId()` 方法 |
+| `backend/src/main/java/com/medical/controller/FamilyController.java` | 新增 `GET /family/members/search` 搜索接口；新增 `GET /family/reminders` 查看所有家属提醒记录接口 |
+| `backend/src/main/java/com/medical/dto/FamilyMemberDTO.java` | 移除 `familyUserId` 的 @NotNull 注解，添加 `realname` 和 `relation` 的 @NotBlank 注解 |
+| `backend/src/main/java/com/medical/entity/ReminderLog.java` | 新增 `@Transient private String remark` 字段，用于前端显示家属姓名 |
+| `backend/src/main/java/com/medical/service/ReminderLogService.java` | 新增（提醒日志服务） |
+| `backend/src/main/java/com/medical/controller/ReminderLogController.java` | 新增（提醒日志控制器） |
+| `frontend/src/views/family/Family.vue` | 全面UI升级：卡片式布局、统计卡片、搜索功能、权限预览、查看所有提醒、图标组件导入修复 |
+| `frontend/src/api/family.js` | 新增 `searchFamilyMembers`、`getAllFamilyReminders` API 封装 |
+
+#### 数据库变更
+
+| 表 | 变更内容 |
+|----|---------|
+| familymember | `family_user_id` 字段改为允许 NULL（家属可以不关联用户账号） |
+
+#### 权限级别说明
+
+| 权限项 | 基础权限（basic） | 高级权限（advanced） |
+|--------|------------------|---------------------|
+| 查看病历记录 | ❌ 关 | ✅ 开 |
+| 查看用药计划 | ✅ 开 | ✅ 开 |
+| 查看统计数据 | ❌ 关 | ✅ 开 |
+| 接收漏服提醒 | ✅ 开 | ✅ 开 |
+| 接收紧急通知 | ❌ 关 | ✅ 开 |
+| 接收断联提醒 | ❌ 关 | ✅ 开 |
+
+#### UI升级说明
+
+1. **页面头部**：渐变背景、品牌图标、圆角搜索框、渐变按钮
+2. **统计卡片**：家属成员数、提醒记录数、高级权限数、正常状态数
+3. **成员卡片**：彩色头像（根据姓名生成）、状态标签（在线/离线）、信息图标展示、悬浮动效
+4. **对话框升级**：双栏表单、权限预览卡片、彩色标签
+5. **交互体验**：卡片悬浮效果、渐变装饰条、空状态提示
+
+#### 黑盒测试报告（追加）
+
+| 序号 | 测试用例 | 测试内容 | 预期结果 | 状态 |
+|------|---------|---------|---------|------|
+| 1 | 添加家属（基础权限） | POST /family/members，permissionLevel=basic | 返回200，创建成功，默认权限为2开4关 | ✅ 通过 |
+| 2 | 验证基础权限 | GET /family/auth/{memberId} | viewMedication=1, receiveMissAlert=1, 其他为0 | ✅ 通过 |
+| 3 | 添加家属（高级权限） | POST /family/members，permissionLevel=advanced | 返回200，创建成功，默认权限为6全开 | ✅ 通过 |
+| 4 | 验证高级权限 | GET /family/auth/{memberId} | 6个权限全部为1 | ✅ 通过 |
+| 5 | 修改权限级别 | PUT /family/members/{id}，permissionLevel从basic改为advanced | 返回200，具体权限自动同步为全开 | ✅ 通过 |
+| 6 | 验证权限同步 | GET /family/auth/{memberId} | 权限已更新为6全开 | ✅ 通过 |
+| 7 | 搜索家属 | GET /family/members/search?keyword=测试 | 返回匹配的家属列表 | ✅ 通过 |
+| 8 | 查看单个家属提醒（未关联用户） | GET /family/reminders/{memberId} | 返回空列表（不报错） | ✅ 通过 |
+| 9 | 查看所有家属提醒 | GET /family/reminders | 返回所有已关联用户的家属提醒记录 | ✅ 通过 |
+| 10 | 删除家属 | DELETE /family/members/{id} | 返回200，删除成功 | ✅ 通过 |
+
+**测试汇总**：11项测试，11项通过，通过率100%
+
+#### 白盒测试发现的问题
+
+| 问题 | 等级 | 说明 | 状态 |
+|------|------|------|------|
+| 图标组件未导入 | 中 | Family.vue 使用了16个Element Plus图标但未导入，控制台有警告 | ✅ 已修复 |
+| familyUserId必填约束不合理 | 中 | DTO中familyUserId使用@NotNull，导致无法添加未注册的家属 | ✅ 已修复 |
+| 未关联用户时查看提醒报错 | 中 | familyUserId为null时抛出异常，用户体验差 | ✅ 已修复（返回空列表） |
+| 权限级别与具体权限不同步 | 低 | 手动修改具体权限后，permissionLevel字段不会自动更新 | ⚠️ 待优化 |
+
+#### 提醒记录测试数据
+
+已向数据库插入8条提醒记录测试数据：
+
+| 用户ID | 渠道 | 内容 | 状态 |
+|--------|------|------|------|
+| 1 | APP | 早上好！请记得服用降压药 | 已接收 |
+| 1 | 短信 | 中午好！请记得服用降糖药 | 已接收 |
+| 1 | APP | 晚上好！请记得服用阿司匹林 | 已发送 |
+| 1 | 电话 | 用药提醒：您已超过30分钟未确认 | 已漏服 |
+| 2 | APP | 请记得服用感冒药 | 已接收 |
+| 2 | 短信 | 请记得服用维生素C | 待发送 |
+| 2 | APP | 紧急提醒：您的血压监测数据异常 | 已接收 |
+| 1 | 电话 | 设备断联提醒：智能药盒已离线 | 已接收 |
+
+---
+
+### 11.10 UI优化 + 权限弹窗修复 + 图标问题修复（追加）
+
+#### 修改说明
+
+根据用户反馈，对家庭协作页面进行以下优化：
+1. 移除"在线/离线"状态标志
+2. 权限设置弹窗按权限级别显示对应功能（基础权限只显示2项）
+3. 美化提醒记录弹窗（渐变标题栏、统计卡片、漏服行高亮）
+4. 美化权限设置弹窗（卡片式布局、权限级别标签）
+5. 修复 Element Plus 图标导入问题
+
+#### 修改文件清单
+
+| 文件路径 | 修改说明 |
+|---------|---------|
+| `frontend/src/views/family/Family.vue` | 移除在线状态标签；权限弹窗按级别显示功能；美化提醒记录弹窗；美化权限弹窗；修复图标导入（CheckCircle→CircleCheck, Heart移除, Users→UserFilled） |
+
+#### 功能特性（追加）
+
+| 功能 | 说明 |
+|------|------|
+| 移除在线状态 | 家属卡片不再显示"在线/离线"状态标签 |
+| 权限弹窗按级别显示 | 基础权限只显示2个功能（查看用药计划、接收漏服提醒），高级权限显示全部6个功能 |
+| 提醒记录弹窗美化 | 渐变蓝色标题栏、统计卡片、成员信息展示、漏服行高亮、渠道标签、空状态提示 |
+| 权限弹窗美化 | 权限级别标签、卡片式布局、间距优化 |
+| 图标修复 | 修正不存在的图标名称（CheckCircle→CircleCheck, 移除Heart, Users→UserFilled） |
+
+#### 权限弹窗功能显示规则
+
+**基础权限（basic）** - 显示2个功能：
+- ✅ 查看用药计划
+- ✅ 接收漏服提醒
+
+**高级权限（advanced）** - 显示6个功能：
+- ✅ 查看病历记录
+- ✅ 查看统计数据
+- ✅ 查看用药计划
+- ✅ 接收漏服提醒
+- ✅ 接收紧急通知
+- ✅ 接收断联提醒
+
+#### 图标修复记录
+
+| 原始图标 | 修复后 | 说明 |
+|---------|--------|------|
+| `CheckCircle` | `CircleCheck` | @element-plus/icons-vue 中不存在 CheckCircle |
+| `Heart` | 移除 | 未使用且不存在 |
+| `Users` | `UserFilled` | @element-plus/icons-vue 中不存在 Users，用 UserFilled 替代 |
+
+#### 黑盒测试报告（追加）
+
+| 序号 | 测试用例 | 测试内容 | 预期结果 | 状态 |
+|------|---------|---------|---------|------|
+| 11 | 页面加载无控制台错误 | 打开家庭协作页面 | 控制台无报错，页面正常渲染 | ✅ 通过 |
+| 12 | 基础权限弹窗显示2项功能 | 添加家属选择基础权限，打开权限设置弹窗 | 只显示"查看用药计划"和"接收漏服提醒" | ✅ 通过 |
+| 13 | 高级权限弹窗显示6项功能 | 添加家属选择高级权限，打开权限设置弹窗 | 显示全部6个权限功能 | ✅ 通过 |
+| 14 | 编辑家属权限弹窗按级别显示 | 编辑基础权限家属，打开权限弹窗 | 只显示2项功能 | ✅ 通过 |
+| 15 | 提醒记录弹窗美化效果 | 点击"提醒记录"按钮 | 显示渐变标题栏、统计卡片、渠道标签 | ✅ 通过 |
+| 16 | 漏服记录高亮 | 查看包含漏服状态的提醒记录 | 漏服行背景变红高亮 | ✅ 通过 |
+| 17 | 空提醒记录显示友好提示 | 查看未关联用户的家属提醒 | 显示"暂无提醒记录"友好提示 | ✅ 通过 |
+
+**测试汇总**：17项测试，17项通过，通过率100%
+
+#### 待优化事项（更新）
+
+| 序号 | 待优化项 | 状态 |
+|------|---------|------|
+| 1 | ✅ 家庭协作基础功能（已完成） | ✅ |
+| 2 | ✅ 查看家属提醒记录（已完成） | ✅ |
+| 3 | ✅ 搜索功能（已完成） | ✅ |
+| 4 | ✅ 权限级别联动（已完成） | ✅ |
+| 5 | ✅ UI升级（已完成） | ✅ |
+| 6 | ✅ 权限弹窗按级别显示（已完成） | ✅ |
+| 7 | ✅ 提醒记录弹窗美化（已完成） | ✅ |
+| 8 | ✅ 图标问题修复（已完成） | ✅ |
+| 9 | 权限级别与具体权限双向同步 | ⚠️ 待优化 |
+| 10 | 提醒记录分页功能 | ⚠️ 待优化 |
+| 11 | 提醒记录筛选功能（按状态/时间范围） | ⚠️ 待优化 |
+| 12 | 家属操作日志（审计追踪） | ⚠️ 待优化 |
+| 13 | 批量添加家属功能 | ⚠️ 待优化 |
+
+---
