@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `medicalrecord` (
     `present_history` TEXT COMMENT '现病史',
     `chief_complaint` TEXT COMMENT '主诉',
     `treatment` TEXT COMMENT '处理意见',
+    `medicines` TEXT COMMENT '药品信息（与处理意见分离）',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX `idx_user_id` (`user_id`)
@@ -105,6 +106,37 @@ CREATE TABLE IF NOT EXISTS `medicineinteraction` (
     INDEX `idx_medicine_b` (`medicine_id_b`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- AI分析结果表
+CREATE TABLE IF NOT EXISTS `ai_analysis_result` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+    `user_id` BIGINT NOT NULL,
+    `record_id` BIGINT NOT NULL,
+    `risk_score` INT COMMENT '风险评分(0-100)',
+    `risk_level` VARCHAR(20) COMMENT '风险等级',
+    `total_drugs` INT COMMENT '药品总数',
+    `has_conflict` INT DEFAULT 0 COMMENT '是否有冲突 0:无 1:有',
+    `version` INT DEFAULT 1 COMMENT '分析版本',
+    `conflicts` TEXT COMMENT '冲突详情JSON',
+    `warnings` TEXT COMMENT '风险提示JSON数组',
+    `analysis_time` DATETIME COMMENT '分析时间',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_record_id` (`record_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 药物相互作用表（由外部导入）
+CREATE TABLE IF NOT EXISTS `druginteraction` (
+    `interaction_id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+    `drug_name_a` VARCHAR(100) NOT NULL COMMENT '药品A名称',
+    `drug_name_b` VARCHAR(100) NOT NULL COMMENT '药品B名称',
+    `level` VARCHAR(20) COMMENT '冲突级别(HIGH/MEDIUM/LOW)',
+    `description` TEXT COMMENT '冲突描述',
+    `suggestion` TEXT COMMENT '建议方案',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_drug_a` (`drug_name_a`),
+    INDEX `idx_drug_b` (`drug_name_b`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 计划提醒时间表
 CREATE TABLE IF NOT EXISTS `plan_reminder_time` (
     `time_id` BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -119,3 +151,42 @@ CREATE TABLE IF NOT EXISTS `plan_reminder_time` (
 INSERT IGNORE INTO `user` (`user_name`, `password`, `realname`, `role`) VALUES
 ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '管理员', 1),
 ('test', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '测试用户', 0);
+
+-- 插入测试药品数据（含适应症）
+INSERT IGNORE INTO `medicine` (`medicine_id`, `medicine_name`, `indication`) VALUES
+(1, '苯磺酸氨氯地平片', '用于高血压及心绞痛的治疗'),
+(2, '盐酸二甲双胍片', '用于2型糖尿病的治疗'),
+(3, '阿司匹林肠溶片', '用于预防血栓形成'),
+(4, '阿托伐他汀钙片', '用于高脂血症的治疗'),
+(5, '硝苯地平控释片', '用于高血压的治疗'),
+(6, '格列美脲片', '用于2型糖尿病的治疗'),
+(7, '硫酸氢氯吡格雷片', '用于预防动脉粥样硬化血栓形成'),
+(8, '瑞舒伐他汀钙片', '用于高脂血症的治疗'),
+(9, '阿司匹林肠溶片', '解热镇痛、抗血小板聚集'),
+(10, '盐酸二甲双胍片', '2型糖尿病'),
+(11, '氯雷他定片', '过敏性鼻炎、荨麻疹'),
+(12, '奥美拉唑肠溶胶囊', '胃溃疡、反流性食管炎'),
+(13, '硝苯地平控释片', '高血压、心绞痛'),
+(14, '二甲双胍', '2型糖尿病'),
+(15, '铝碳酸镁咀嚼片', '胃酸过多、胃溃疡'),
+(16, '艾司西酞普兰片', '抑郁症、焦虑症'),
+(17, '氟哌噻吨美利曲辛片', '轻中度抑郁、焦虑'),
+(18, '乐盼片', '轻中度抑郁、焦虑'),
+(19, '律康胶囊', '焦虑症'),
+(20, '郝智片', '肌肉痉挛'),
+(21, '思诺思片', '失眠'),
+(22, '坦度螺酮胶囊（律康）', '焦虑症'),
+(23, '巴氯芬片（郝智）', '肌肉痉挛'),
+(24, '唑吡坦片（思诺思）', '失眠'),
+(25, '低盐低脂饮食', '饮食控制、辅助降压降糖降脂'),
+(26, '厄贝沙坦片', '高血压、2型糖尿病伴微量白蛋白尿'),
+(27, '氟哌噻吨美利曲辛', '轻中度抑郁、焦虑'),
+(28, '坦度螺酮', '焦虑症'),
+(29, '巴氯芬', '肌肉痉挛'),
+(30, '艾司西酞普兰', '抑郁症、焦虑症'),
+(31, '唑吡坦', '失眠'),
+(32, '乐盼', '轻中度抑郁、焦虑'),
+(33, '坦度螺酮胶囊', '焦虑症'),
+(34, '巴氯芬片', '肌肉痉挛'),
+(35, '唑吡坦片', '失眠'),
+(36, '阿卡波糖', '2型糖尿病');

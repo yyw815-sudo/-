@@ -63,3 +63,13 @@ export function uploadTakePhoto(takeId, file) {
 export function getHistoryPlans(userId, status) {
   return request.get(`/plan/user/${userId}/history/${status}`)
 }
+
+/** 获取多个计划的合并日程（按天/时间段分组） */
+export function getCombinedSchedule(planIds) {
+  return request.get('/plan/daily/combined', { params: { planIds: planIds.join(',') } })
+}
+
+/** 冲突检测后自动替换冲突药物 */
+export function applyConflictReplacements(recordIds, conflicts) {
+  return request.post('/plan/apply-replacements', { recordIds, conflicts })
+}

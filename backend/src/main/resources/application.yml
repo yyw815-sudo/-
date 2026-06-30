@@ -40,7 +40,7 @@ baidu:
 upload:
   path: uploads/
 
-# DeepSeek大模型配置
+# DeepSeek大模型配置（AI用药分析用）
 deepseek:
   api-key: sk-e980747601e84a37b563fa81f01ba0e3
   base-url: https://api.deepseek.com

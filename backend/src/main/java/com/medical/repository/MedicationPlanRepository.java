@@ -11,6 +11,7 @@ public interface MedicationPlanRepository extends JpaRepository<MedicationPlan, 
     List<MedicationPlan> findByRecordId(Long recordId);
     List<MedicationPlan> findByMedicineId(Long medicineId);
     List<MedicationPlan> findByUserIdAndStatus(Long userId, Integer status);
+    List<MedicationPlan> findByUserIdAndRecordId(Long userId, Long recordId);
 
     @Query("SELECT COUNT(p) FROM MedicationPlan p WHERE p.recordId = :recordId")
     long countByRecordId(@Param("recordId") Long recordId);

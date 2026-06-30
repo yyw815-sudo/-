@@ -59,6 +59,9 @@ public class MedicalRecord {
     @Column(name = "treatment", columnDefinition = "TEXT")
     private String treatment;        // 处理意见
 
+    @Column(name = "medicines", columnDefinition = "TEXT")
+    private String medicines;        // 药品信息（与处理意见分离）
+
     @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 

@@ -27,19 +27,29 @@
     <!-- 病历列表 -->
     <el-card class="table-card">
       <el-table :data="records" stripe v-loading="loading">
-        <el-table-column prop="recordId" label="ID" width="70" />
-        <el-table-column prop="recordDate" label="日期" width="110">
+        <el-table-column prop="recordId" label="ID" width="60" />
+        <el-table-column prop="recordDate" label="日期" width="100">
           <template #default="{ row }">{{ row.recordDate || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="diagnosis" label="诊断" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="diagnosis" label="诊断" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">{{ row.diagnosis || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="treatment" label="处理意见" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="treatment" label="处理意见" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">{{ row.treatment || '-' }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column prop="medicines" label="药品信息" min-width="150" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.medicines || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="AI分析" width="100" align="center">
           <template #default="{ row }">
-            <el-button type="primary" size="small" link @click="openDetailDialog(row)">查看详情</el-button>
+            <el-tag v-if="planCountMap[row.recordId] > 0" type="success" size="small">已分析</el-tag>
+            <el-tag v-else type="info" size="small">未分析</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" link @click="openDetailDialog(row)">详情</el-button>
+            <el-button type="primary" size="small" link @click="handleAnalyzeSingle(row)">AI分析</el-button>
             <el-button type="danger" size="small" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -94,11 +104,14 @@
         <el-form-item label="处理意见" prop="treatment">
           <el-input v-model="formData.treatment" type="textarea" :rows="3" placeholder="请输入处理意见" />
         </el-form-item>
+        <el-form-item label="药品信息" prop="medicines">
+          <el-input v-model="formData.medicines" type="textarea" :rows="2" placeholder="药品信息（与处理意见分离）" />
+        </el-form-item>
         <el-divider content-position="left">智能导入</el-divider>
         <el-form-item>
           <div class="ocr-result">
-            <div class="ocr-label">智能导入（上传图片，自动识别文字并智能填充字段）：</div>
-            <div style="margin-top: 8px">
+            <div class="ocr-label">智能导入（上传图片，自动识别文字并填充字段）：</div>
+            <div class="ocr-actions">
               <el-upload
                 ref="uploadRef"
                 :auto-upload="false"
@@ -109,7 +122,7 @@
               >
                 <el-button type="info">📷 上传图片</el-button>
               </el-upload>
-              <el-button type="primary" style="margin-left: 8px" :disabled="!selectedFile" :loading="aiParsing" @click="handleOcrUpload">
+              <el-button type="primary" :disabled="!selectedFile" :loading="aiParsing" @click="handleOcrUpload">
                 🔍 智能识别填充
               </el-button>
             </div>
@@ -122,14 +135,14 @@
             <el-table :data="ocrFieldInfo" size="small" stripe style="width: 100%">
               <el-table-column prop="field" label="字段" width="100" />
               <el-table-column prop="value" label="识别值" min-width="200" />
-              <el-table-column prop="score" label="置信度" width="100">
+              <el-table-column prop="score" label="置信度" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag :type="row.score >= 0.85 ? 'success' : row.score >= 0.65 ? 'warning' : 'danger'" size="small">
                     {{ (row.score * 100).toFixed(0) }}%
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="source" label="来源" width="80">
+              <el-table-column prop="source" label="来源" width="80" align="center">
                 <template #default="{ row }">
                   <el-tag type="info" size="small">{{ row.source }}</el-tag>
                 </template>
@@ -155,6 +168,7 @@
         <el-descriptions-item label="既往病史" :span="2">{{ detailData.pastHistory || '-' }}</el-descriptions-item>
         <el-descriptions-item label="诊断" :span="2">{{ detailData.diagnosis || '-' }}</el-descriptions-item>
         <el-descriptions-item label="处理意见" :span="2">{{ detailData.treatment || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="药品信息" :span="2">{{ detailData.medicines || '-' }}</el-descriptions-item>
       </el-descriptions>
       <template #footer>
         <el-button @click="detailVisible = false">关闭</el-button>
@@ -194,7 +208,8 @@ import {
   deleteRecordWithPlans,
   ocrRecognize
 } from '@/api/record'
-import { getPlansByRecordId } from '@/api/plan'
+import { analyzePrescription, getAnalysisResult } from '@/api/prescription'
+import { getPlansByRecordId, countPlansByRecordId } from '@/api/plan'
 
 const USER_ID = 1
 
@@ -208,6 +223,8 @@ const formRef = ref()
 const records = ref([])
 const pagination = reactive({ page: 1, size: 10, total: 0 })
 const searchForm = reactive({ keyword: '', startDate: '', endDate: '' })
+const planCountMap = ref({})
+const analyzingMap = ref({})
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增病历')
@@ -220,10 +237,10 @@ const formData = reactive({
   presentHistory: '',
   pastHistory: '',
   diagnosis: '',
-  treatment: ''
+  treatment: '',
+  medicines: ''
 })
 const selectedFile = ref(null)
-const ocrRawText = ref('')
 const ocrFieldInfo = ref([])
 
 const deleteDialogVisible = ref(false)
@@ -239,7 +256,8 @@ const detailData = reactive({
   presentHistory: '',
   pastHistory: '',
   diagnosis: '',
-  treatment: ''
+  treatment: '',
+  medicines: ''
 })
 
 const formRules = {
@@ -262,10 +280,45 @@ async function fetchRecords() {
     })
     records.value = res.data.content || res.data || []
     pagination.total = res.data.totalElements || 0
+    // 加载各病历AI分析状态
+    loadPlanCounts()
   } catch (e) {
     ElMessage.error('加载病历列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+/** 加载各病历的用药计划数（判断是否已AI分析） */
+async function loadPlanCounts() {
+  const map = {}
+  for (const r of records.value) {
+    try {
+      const cntRes = await countPlansByRecordId(r.recordId)
+      map[r.recordId] = cntRes.data || 0
+    } catch { map[r.recordId] = 0 }
+  }
+  planCountMap.value = map
+}
+
+/** 单病历AI分析 */
+async function handleAnalyzeSingle(row) {
+  if (analyzingMap.value[row.recordId]) return
+  if (planCountMap.value[row.recordId] > 0) {
+    ElMessage.info('该病历已有用药计划')
+    return
+  }
+  analyzingMap.value[row.recordId] = true
+  try {
+    await analyzePrescription(USER_ID, row.recordId)
+    ElMessage.success('AI分析完成，用药计划已生成')
+    // 刷新计划数
+    const cntRes = await countPlansByRecordId(row.recordId)
+    planCountMap.value[row.recordId] = cntRes.data || 0
+  } catch (e) {
+    ElMessage.error('AI分析失败: ' + (e.response?.data?.message || e.message))
+  } finally {
+    analyzingMap.value[row.recordId] = false
   }
 }
 
@@ -298,7 +351,8 @@ function openDetailDialog(row) {
     presentHistory: row.presentHistory || '',
     pastHistory: row.pastHistory || '',
     diagnosis: row.diagnosis || '',
-    treatment: row.treatment || ''
+    treatment: row.treatment || '',
+    medicines: row.medicines || ''
   })
   detailVisible.value = true
 }
@@ -313,10 +367,10 @@ function resetForm() {
     presentHistory: '',
     pastHistory: '',
     diagnosis: '',
-    treatment: ''
+    treatment: '',
+    medicines: ''
   })
   selectedFile.value = null
-  ocrRawText.value = ''
   ocrFieldInfo.value = []
   formRef.value?.clearValidate()
 }
@@ -339,12 +393,9 @@ async function handleOcrUpload() {
     const d = res.data
     const p = d.record || d
 
-    // 显示OCR原文
-    if (d.rawText) ocrRawText.value = d.rawText
-
-    // 显示字段识别详情（只显示8个核心字段）
+    // 显示字段识别详情（显示8个核心字段 + 药品字段）
     if (d.fields && d.scores) {
-      const CORE_FIELDS = ['日期', '性别', '年龄', '主诉', '现病史', '既往史', '诊断', '处理意见']
+      const CORE_FIELDS = ['日期', '性别', '年龄', '主诉', '现病史', '既往史', '诊断', '处理意见', '药品']
       const info = []
       for (const field of CORE_FIELDS) {
         if (d.fields[field]) {
@@ -368,6 +419,7 @@ async function handleOcrUpload() {
     if (p.pastHistory) formData.pastHistory = p.pastHistory
     if (p.diagnosis) formData.diagnosis = p.diagnosis
     if (p.treatment) formData.treatment = p.treatment
+    if (p.medicines) formData.medicines = p.medicines
 
     // 从原始fields补填缺失字段
     if (d.fields) {
@@ -383,6 +435,7 @@ async function handleOcrUpload() {
       if (!formData.pastHistory) formData.pastHistory = fields['既往史'] || ''
       if (!formData.diagnosis) formData.diagnosis = fields['诊断'] || ''
       if (!formData.treatment) formData.treatment = fields['处理意见'] || ''
+      if (!formData.medicines) formData.medicines = fields['药品'] || ''
     }
 
     ElMessage.success('智能识别成功，请检查并修改后保存')
@@ -407,6 +460,7 @@ async function handleSubmit() {
       pastHistory: formData.pastHistory,
       diagnosis: formData.diagnosis,
       treatment: formData.treatment,
+      medicines: formData.medicines,
       diseaseName: formData.diagnosis || formData.chiefComplaint || '未知疾病'
     }
 
@@ -482,19 +536,45 @@ async function confirmDelete() {
 <style lang="scss" scoped>
 .medical-record-page {
   padding: 20px;
+
   .search-card {
     margin-bottom: 16px;
+    .el-form {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
   }
+
+  .table-card {
+    .el-table {
+      th.el-table__cell {
+        background-color: #f5f7fa;
+        color: #606266;
+        font-weight: 600;
+      }
+      .el-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 56px;
+      }
+    }
+  }
+
   .pagination-wrap {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 10px 0;
   }
+
   .upload-tip {
     margin-left: 8px;
     color: #999;
     font-size: 12px;
   }
+
   .ocr-result {
     width: 100%;
     .ocr-label {
@@ -502,7 +582,23 @@ async function confirmDelete() {
       color: #666;
       font-size: 13px;
     }
+    .ocr-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
   }
+
+  .ocr-field-info {
+    width: 100%;
+    .ocr-field-label {
+      margin-bottom: 4px;
+      color: #666;
+      font-size: 13px;
+    }
+  }
+
   .cascade-warning {
     display: flex;
     align-items: center;
@@ -513,6 +609,7 @@ async function confirmDelete() {
     margin-bottom: 12px;
     color: #e6a23c;
   }
+
   .record-summary {
     background: #f5f7fa;
     padding: 12px;
@@ -522,20 +619,10 @@ async function confirmDelete() {
       font-size: 14px;
     }
   }
-  .ocr-raw-text {
-    width: 100%;
-    .ocr-raw-label {
-      margin-bottom: 4px;
-      color: #666;
-      font-size: 13px;
-    }
-  }
-  .ocr-field-info {
-    width: 100%;
-    .ocr-field-label {
-      margin-bottom: 4px;
-      color: #666;
-      font-size: 13px;
+
+  .el-descriptions {
+    .el-descriptions__title {
+      font-weight: 600;
     }
   }
 }

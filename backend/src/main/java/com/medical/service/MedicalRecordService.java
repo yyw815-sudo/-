@@ -154,6 +154,9 @@ public class MedicalRecordService {
         if (fields.containsKey("处理意见") || fields.containsKey("treatment")) {
             record.setTreatment(fields.getOrDefault("处理意见", fields.get("treatment")));
         }
+        if (fields.containsKey("药品") || fields.containsKey("medicines")) {
+            record.setMedicines(fields.getOrDefault("药品", fields.get("medicines")));
+        }
 
         if (fields.containsKey("姓名") || fields.containsKey("name")) {
             String name = fields.getOrDefault("姓名", fields.get("name"));
@@ -207,17 +210,6 @@ public class MedicalRecordService {
         } else {
             record.setRecordDate(LocalDate.now());
         }
-        if (fields.containsKey("处方") || fields.containsKey("medicines") || fields.containsKey("药品")) {
-            String drugInfo = fields.getOrDefault("处方", fields.getOrDefault("medicines", fields.getOrDefault("药品", "")));
-            // 将药品信息追加到处理意见中
-            String currentTreatment = record.getTreatment();
-            if (currentTreatment != null && !currentTreatment.isEmpty()) {
-                record.setTreatment(currentTreatment + "\n【药品】" + drugInfo);
-            } else {
-                record.setTreatment("【药品】" + drugInfo);
-            }
-        }
-
         if (record.getDiseaseName() == null) {
             record.setDiseaseName("未知疾病");
         }

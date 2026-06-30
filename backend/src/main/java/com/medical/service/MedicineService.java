@@ -31,7 +31,7 @@ public class MedicineService {
 
     /** 查找或创建药品（AI分析用） */
     public Medicine findOrCreateMedicine(String medicineName) {
-        Medicine existing = medicineRepository.findByMedicineName(medicineName);
+        Medicine existing = medicineRepository.findByMedicineName(medicineName).stream().findFirst().orElse(null);
         if (existing != null) return existing;
 
         Medicine medicine = new Medicine();

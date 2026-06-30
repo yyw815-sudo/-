@@ -99,11 +99,16 @@ const handleLogout = () => {
   .layout-aside {
     background: #fff;
     border-right: 1px solid #e6e6e6;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
   }
   
   .layout-main {
     background: #f5f5f5;
     padding: 20px;
+    overflow: visible;
   }
 }
 </style>

@@ -104,6 +104,31 @@ public class MedicationPlanController {
         return Result.success(dailyRecordService.getByUserIdAndDateRange(userId, start, end));
     }
 
+    /** 获取多个计划的合并日程（按天/时间段分组展示药品） */
+    @GetMapping("/daily/combined")
+    public Result<List<CombinedScheduleDTO>> getCombinedSchedule(@RequestParam String planIds) {
+        List<Long> ids = java.util.Arrays.stream(planIds.split(","))
+                .map(Long::parseLong).collect(java.util.stream.Collectors.toList());
+        return Result.success(dailyRecordService.getCombinedSchedule(ids));
+    }
+
+    /** 冲突检测后自动替换冲突药物 */
+    @PostMapping("/apply-replacements")
+    public Result<Void> applyReplacements(@RequestBody Map<String, Object> params) {
+        @SuppressWarnings("unchecked")
+        List<Integer> recordIdsInt = (List<Integer>) params.get("recordIds");
+        List<Long> recordIds = recordIdsInt.stream().map(Long::valueOf).collect(java.util.stream.Collectors.toList());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> conflictsRaw = (List<Map<String, Object>>) params.get("conflicts");
+        List<ConflictCheckResultDTO.ConflictItem> conflicts = new java.util.ArrayList<>();
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (Map<String, Object> raw : conflictsRaw) {
+            conflicts.add(mapper.convertValue(raw, ConflictCheckResultDTO.ConflictItem.class));
+        }
+        planService.applyConflictReplacements(recordIds, conflicts);
+        return Result.success(null);
+    }
+
     @PostMapping("/daily/{takeId}/missed")
     public Result<MedicationDailyRecordDTO> markAsMissed(@PathVariable Long takeId) {
         return Result.success(dailyRecordService.markAsMissed(takeId));

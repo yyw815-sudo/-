@@ -55,7 +55,10 @@ public enum FieldStrategy {
             Arrays.asList("医生", "医师", "主治医生", "开方医生", "主诊医生")),
     HOSPITAL("医院", "hospital", MatchPriority.HIGH, true, false, false, false,
             EnumSet.of(Direction.RIGHT), Direction.RIGHT,
-            Arrays.asList("医院", "医疗机构", "医院名称"));
+            Arrays.asList("医院", "医疗机构", "医院名称")),
+    MEDICINES("药品", "medicines", MatchPriority.LOW, false, true, false, true,
+            EnumSet.of(Direction.BELOW), Direction.BELOW,
+            Arrays.asList("药品", "药物", "用药", "处方", "Rp", "Rp."));
 
     public enum MatchPriority {
         HIGH(0), LOW(1);

@@ -68,7 +68,8 @@ public class DeepSeekService {
         sb.append("  \"现病史\": \"值\",\n");
         sb.append("  \"既往史\": \"值\",\n");
         sb.append("  \"诊断\": \"值\",\n");
-        sb.append("  \"处理意见\": \"值\"\n");
+        sb.append("  \"处理意见\": \"值\",\n");
+        sb.append("  \"药品\": \"值\"\n");
         sb.append("}");
 
         try {
@@ -78,7 +79,7 @@ public class DeepSeekService {
             if (content == null) return fields;
 
             com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(content);
-            String[] expectedKeys = {"性别", "年龄", "日期", "主诉", "现病史", "既往史", "诊断", "处理意见"};
+            String[] expectedKeys = {"性别", "年龄", "日期", "主诉", "现病史", "既往史", "诊断", "处理意见", "药品"};
             for (String key : expectedKeys) {
                 com.fasterxml.jackson.databind.JsonNode node = root.get(key);
                 if (node != null && !node.isNull()) {
@@ -138,7 +139,8 @@ public class DeepSeekService {
         sb.append("- physicalExam: 体格检查\n");
         sb.append("- auxiliaryExam: 辅助检查\n");
         sb.append("- diagnosis: 诊断，即医生给出的诊断结论（如[高血压]），不要包含主诉内容\n");
-        sb.append("- treatment: 处理意见，请包含处方药品信息（药品名称、用法用量等）\n");
+        sb.append("- treatment: 处理意见（如复诊建议等，不包含药品）\n");
+        sb.append("- medicines: 药品信息（处方药品名称、用法用量等，只包含药品相关内容）\n");
         sb.append("- doctor: 医生姓名\n");
 
         sb.append("\n输出格式要求：纯JSON格式，不要包含其他内容。");
@@ -230,5 +232,17 @@ public class DeepSeekService {
         }
 
         return result;
+    }
+
+    /**
+     * 调用DeepSeek文本模型（用药分析专用）
+     */
+    public String callTextModel(String prompt) {
+        try {
+            return callDeepSeek(prompt);
+        } catch (Exception e) {
+            logger.error("callTextModel调用失败: {}", e.getMessage());
+            return "";
+        }
     }
 }

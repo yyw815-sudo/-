@@ -146,7 +146,7 @@ public class MedicalOcrService {
             // ========== 第四层：LLM语义纠错 ==========
             // 触发条件：有低分字段、全空、或缺失核心字段（诊断/主诉/医生/医院/处方）
             Set<String> CORE_FIELDS = new java.util.HashSet<>(Arrays.asList(
-                    "诊断", "主诉", "医生", "医院", "处方", "姓名", "现病史", "既往史"));
+                    "诊断", "主诉", "医生", "医院", "处方", "姓名", "现病史", "既往史", "药品"));
             boolean missingCoreFields = result.getFields().keySet().stream()
                     .noneMatch(k -> CORE_FIELDS.contains(k));
             boolean allFieldsEmpty = result.getFields().isEmpty();
