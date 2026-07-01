@@ -4,9 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
-/**
- * 管理员实体类
- */
 @Data
 @Entity
 @Table(name = "admin")
@@ -29,10 +26,10 @@ public class Admin {
     @Column(name = "phone", length = 20)
     private String phone;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
 
     @PrePersist

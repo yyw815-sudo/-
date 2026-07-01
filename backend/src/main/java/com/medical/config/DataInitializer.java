@@ -6,9 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-/**
- * 数据初始化类
- */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -17,7 +14,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (adminRepository.existsByAdminName("admin") == null || adminRepository.existsByAdminName("admin") == 0) {
+        if (!adminRepository.existsByAdminName("admin")) {
             Admin admin = new Admin();
             admin.setAdminName("admin");
             admin.setPassword("admin123");

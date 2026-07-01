@@ -38,7 +38,7 @@ export function getUserInfo(userId) {
 // 获取管理员信息
 export function getAdminInfo(adminId) {
   return request({
-    url: `/admin/${adminId}`,
+    url: `/admin/info/${adminId}`,
     method: 'get'
   })
 }

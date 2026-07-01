@@ -17,6 +17,15 @@
           <el-icon><DataLine /></el-icon>
           <span>数据概览</span>
         </el-menu-item>
+        <el-sub-menu index="system-center">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统中心</span>
+          </template>
+          <el-menu-item index="statistics">数据统计</el-menu-item>
+          <el-menu-item index="announcement">系统公告</el-menu-item>
+          <el-menu-item index="ai-config">AI配置</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="user-manage">
           <el-icon><User /></el-icon>
           <span>用户管理</span>
@@ -37,6 +46,7 @@
         <div class="header-left">
           <el-breadcrumb separator="/">
             <el-breadcrumb-item :to="{ path: '/admin' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="activeMenu.startsWith('system-')">系统中心</el-breadcrumb-item>
             <el-breadcrumb-item>{{ currentPageTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -75,7 +85,8 @@ import {
   Bell,
   Avatar,
   UserFilled,
-  ArrowDown
+  ArrowDown,
+  Setting
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -86,6 +97,9 @@ const adminName = computed(() => userStore.userName || '管理员')
 
 const activeMenu = computed(() => {
   const path = route.path
+  if (path.includes('system/statistics')) return 'statistics'
+  if (path.includes('system/announcement')) return 'announcement'
+  if (path.includes('system/ai-config')) return 'ai-config'
   if (path.includes('user-manage')) return 'user-manage'
   if (path.includes('reminder-manage')) return 'reminder-manage'
   if (path.includes('family-manage')) return 'family-manage'
@@ -95,6 +109,9 @@ const activeMenu = computed(() => {
 const currentPageTitle = computed(() => {
   const titles = {
     'dashboard': '数据概览',
+    'statistics': '数据统计',
+    'announcement': '系统公告',
+    'ai-config': 'AI配置',
     'user-manage': '用户管理',
     'reminder-manage': '提醒管理',
     'family-manage': '家庭协作'
@@ -105,6 +122,12 @@ const currentPageTitle = computed(() => {
 function handleMenuSelect(index) {
   if (index === 'dashboard') {
     router.push('/admin/dashboard')
+  } else if (index === 'statistics') {
+    router.push('/admin/system/statistics')
+  } else if (index === 'announcement') {
+    router.push('/admin/system/announcement')
+  } else if (index === 'ai-config') {
+    router.push('/admin/system/ai-config')
   } else if (index === 'user-manage') {
     router.push('/admin/user-manage')
   } else if (index === 'reminder-manage') {
@@ -171,6 +194,15 @@ function handleCommand(command) {
 }
 
 .admin-menu :deep(.el-menu-item:hover) {
+  background-color: #374151;
+}
+
+.admin-menu :deep(.el-sub-menu__title) {
+  height: 50px;
+  line-height: 50px;
+}
+
+.admin-menu :deep(.el-sub-menu__title:hover) {
   background-color: #374151;
 }
 

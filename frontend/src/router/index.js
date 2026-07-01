@@ -9,6 +9,12 @@ const routes = [
     meta: { title: '登录' }
   },
   {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('@/views/admin/Login.vue'),
+    meta: { title: '管理员登录' }
+  },
+  {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/user/Register.vue'),
@@ -78,6 +84,24 @@ const routes = [
         meta: { title: '数据概览', requiresAdmin: true }
       },
       {
+        path: 'system/statistics',
+        name: 'DataStatistics',
+        component: () => import('@/views/admin/DataStatistics.vue'),
+        meta: { title: '数据统计', requiresAdmin: true }
+      },
+      {
+        path: 'system/announcement',
+        name: 'SystemAnnouncement',
+        component: () => import('@/views/admin/SystemAnnouncement.vue'),
+        meta: { title: '系统公告', requiresAdmin: true }
+      },
+      {
+        path: 'system/ai-config',
+        name: 'AIConfig',
+        component: () => import('@/views/admin/AIConfig.vue'),
+        meta: { title: 'AI配置', requiresAdmin: true }
+      },
+      {
         path: 'user-manage',
         name: 'UserManage',
         component: () => import('@/views/admin/UserManage.vue'),
@@ -110,7 +134,6 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title ? `${to.meta.title} - 慢性病用药智能提醒系统` : '慢性病用药智能提醒系统'
   
@@ -118,7 +141,7 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAdmin) {
     if (!userStore.isLoggedIn || !userStore.isAdmin) {
-      next('/login')
+      next('/admin/login')
     } else {
       next()
     }
