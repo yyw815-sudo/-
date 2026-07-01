@@ -24,3 +24,25 @@ Thumbs.db
 # Env
 .env
 *.log
+
+# MySQL Local
+mysql_server/
+mysql_data_new/
+mysql_data/
+*.bat
+*.ini
+
+# Maven Local
+.m2/
+settings.xml
+
+# Scripts
+query
+start
+stop
+delete
+init-db.ps1
+run-backend.ps1
+run-frontend.ps1
+setup-maven.ps1
+setup-mysql.ps1
