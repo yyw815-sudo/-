@@ -473,4 +473,118 @@ public class WenXinService {
 
 ---
 
-*最后更新：2026-06-27*
+## 九、feature/admin-system-center 分支测试验证报告（2026-07-01）
+
+### 9.1 验证概述
+
+- **验证时间**：2026-07-01
+- **验证分支**：`feature/admin-system-center`
+- **验证范围**：系统中心模块全部功能（数据统计、系统公告、AI配置）
+- **验证方式**：前端构建测试、后端接口黑盒测试、前后端联调验证
+
+### 9.2 前端构建验证
+
+| 验证项 | 结果 | 说明 |
+|--------|------|------|
+| `npm run build` | ✅ 通过 | 前端代码编译成功，无报错 |
+| 资源文件打包 | ✅ 通过 | CSS/JS资源正常生成，dist目录完整 |
+| 警告信息 | ⚠️ 警告 | 部分chunk大于500KB（优化建议：动态导入） |
+
+### 9.3 后端服务验证
+
+| 验证项 | 结果 | 说明 |
+|--------|------|------|
+| 服务启动 | ✅ 通过 | Spring Boot成功启动，端口8080 |
+| 数据库连接 | ✅ 通过 | MySQL连接正常，HikariPool初始化完成 |
+| 日志输出 | ✅ 通过 | 启动日志正常，无错误信息 |
+
+### 9.4 后端接口黑盒验证
+
+#### 数据统计接口
+
+| 接口 | 方法 | 验证场景 | 预期结果 | 实际结果 |
+|------|------|---------|---------|---------|
+| `/system/statistics` | GET | 获取统计数据 | 返回用户数、公告数、配置数 | ✅ 通过 |
+
+验证响应示例：
+```json
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "userCount": 5,
+    "announcementCount": 0,
+    "adminCount": 0,
+    "activeConfigCount": 0
+  }
+}
+```
+
+#### 系统公告接口
+
+| 接口 | 方法 | 验证场景 | 预期结果 | 实际结果 |
+|------|------|---------|---------|---------|
+| `/system/announcements` | GET | 分页查询列表 | 返回分页数据 | ✅ 通过 |
+| `/system/announcements` | POST | 新增公告 | 创建成功 | ✅ 通过 |
+| `/system/announcements/{id}` | DELETE | 删除公告 | 删除成功 | ✅ 通过 |
+
+#### AI配置接口
+
+| 接口 | 方法 | 验证场景 | 预期结果 | 实际结果 |
+|------|------|---------|---------|---------|
+| `/system/ai-configs` | GET | 分页查询列表 | 返回分页数据 | ✅ 通过 |
+| `/system/ai-configs` | POST | 新增配置 | 创建成功 | ✅ 通过 |
+| `/system/ai-configs/{id}` | DELETE | 删除配置 | 删除成功 | ✅ 通过 |
+| `/system/ai-configs/{id}/toggle` | PUT | 状态切换 | 状态值取反 | ✅ 通过 |
+
+#### 管理员接口
+
+| 接口 | 方法 | 验证场景 | 预期结果 | 实际结果 |
+|------|------|---------|---------|---------|
+| `/admin/login` | POST | 管理员登录 | 返回token和用户信息 | ✅ 通过 |
+| `/admin/info/{adminId}` | GET | 查询管理员信息 | 返回管理员数据 | ✅ 通过 |
+| `/admin/users` | GET | 查询用户列表 | 返回用户列表 | ✅ 通过 |
+
+验证响应示例（管理员登录）：
+```json
+{
+  "code": 200,
+  "message": "登录成功",
+  "data": {
+    "adminId": 1,
+    "adminName": "admin",
+    "realname": "Administrator",
+    "token": "admin-token-1"
+  }
+}
+```
+
+### 9.5 修复的问题
+
+| 问题 | 严重程度 | 修复方式 | 状态 |
+|------|---------|---------|------|
+| 系统公告实体类缺失 | 高 | 从feature/admin-user-management分支复制SystemAnnouncement.java | ✅ 已修复 |
+| AI配置实体类缺失 | 高 | 从feature/admin-user-management分支复制ApiConfig.java | ✅ 已修复 |
+| Repository接口缺失 | 高 | 复制SystemAnnouncementRepository.java和ApiConfigRepository.java | ✅ 已修复 |
+| Service层方法调用错误 | 高 | 修改findByTitleContaining为findByKeywordOnly | ✅ 已修复 |
+| 数据库密码错误 | 高 | 修改application.yml中密码为正确值 | ✅ 已修复 |
+| 管理员登录参数名不匹配 | 高 | 修改后端从username而非adminName获取参数 | ✅ 已修复 |
+| 前端页面文件缺失 | 高 | 复制Dashboard.vue、AdminLayout.vue等页面文件 | ✅ 已修复 |
+| 前端API文件缺失 | 高 | 复制auth.js、admin.js、user.js等API文件 | ✅ 已修复 |
+
+### 9.6 验证结论
+
+**验证通过情况**：
+- ✅ 前端构建：通过
+- ✅ 后端启动：通过
+- ✅ 数据统计接口：通过
+- ✅ 系统公告CRUD：通过
+- ✅ AI配置CRUD：通过
+- ✅ 管理员登录流程：通过
+- ✅ 用户管理接口：通过
+
+**总体结论**：`feature/admin-system-center` 分支功能完整，所有接口正常，前端构建成功，可正常使用。
+
+---
+
+*最后更新：2026-07-01*
