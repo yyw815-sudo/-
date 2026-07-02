@@ -102,6 +102,24 @@ const routes = [
         meta: { title: 'AI配置', requiresAdmin: true }
       },
       {
+        path: 'ai-center/medication-plan',
+        name: 'AiMedicationPlan',
+        component: () => import('@/views/admin/AiMedicationPlan.vue'),
+        meta: { title: 'AI用药计划', requiresAdmin: true }
+      },
+      {
+        path: 'ai-center/ocr-review',
+        name: 'OcrReview',
+        component: () => import('@/views/admin/OcrReview.vue'),
+        meta: { title: 'OCR审核', requiresAdmin: true }
+      },
+      {
+        path: 'ai-center/pill-review',
+        name: 'PillRecognitionReview',
+        component: () => import('@/views/admin/PillRecognitionReview.vue'),
+        meta: { title: '药片识别审核', requiresAdmin: true }
+      },
+      {
         path: 'user-manage',
         name: 'UserManage',
         component: () => import('@/views/admin/UserManage.vue'),

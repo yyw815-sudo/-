@@ -28,7 +28,7 @@ public class AdminController {
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody Map<String, String> loginData) {
-        String adminName = loginData.get("username");
+        String adminName = loginData.get("adminName");
         String password = loginData.get("password");
 
         Optional<Admin> adminOpt = adminRepository.findByAdminName(adminName);

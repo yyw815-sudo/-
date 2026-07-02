@@ -26,6 +26,15 @@
           <el-menu-item index="announcement">系统公告</el-menu-item>
           <el-menu-item index="ai-config">AI配置</el-menu-item>
         </el-sub-menu>
+        <el-sub-menu index="ai-center">
+          <template #title>
+            <el-icon><Cpu /></el-icon>
+            <span>AI中心</span>
+          </template>
+          <el-menu-item index="medication-plan">AI用药计划</el-menu-item>
+          <el-menu-item index="ocr-review">OCR审核</el-menu-item>
+          <el-menu-item index="pill-review">药片识别审核</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="user-manage">
           <el-icon><User /></el-icon>
           <span>用户管理</span>
@@ -86,7 +95,8 @@ import {
   Avatar,
   UserFilled,
   ArrowDown,
-  Setting
+  Setting,
+  Cpu
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -100,6 +110,9 @@ const activeMenu = computed(() => {
   if (path.includes('system/statistics')) return 'statistics'
   if (path.includes('system/announcement')) return 'announcement'
   if (path.includes('system/ai-config')) return 'ai-config'
+  if (path.includes('ai-center/medication-plan')) return 'medication-plan'
+  if (path.includes('ai-center/ocr-review')) return 'ocr-review'
+  if (path.includes('ai-center/pill-review')) return 'pill-review'
   if (path.includes('user-manage')) return 'user-manage'
   if (path.includes('reminder-manage')) return 'reminder-manage'
   if (path.includes('family-manage')) return 'family-manage'
@@ -112,6 +125,9 @@ const currentPageTitle = computed(() => {
     'statistics': '数据统计',
     'announcement': '系统公告',
     'ai-config': 'AI配置',
+    'medication-plan': 'AI用药计划',
+    'ocr-review': 'OCR审核',
+    'pill-review': '药片识别审核',
     'user-manage': '用户管理',
     'reminder-manage': '提醒管理',
     'family-manage': '家庭协作'
@@ -128,6 +144,12 @@ function handleMenuSelect(index) {
     router.push('/admin/system/announcement')
   } else if (index === 'ai-config') {
     router.push('/admin/system/ai-config')
+  } else if (index === 'medication-plan') {
+    router.push('/admin/ai-center/medication-plan')
+  } else if (index === 'ocr-review') {
+    router.push('/admin/ai-center/ocr-review')
+  } else if (index === 'pill-review') {
+    router.push('/admin/ai-center/pill-review')
   } else if (index === 'user-manage') {
     router.push('/admin/user-manage')
   } else if (index === 'reminder-manage') {
